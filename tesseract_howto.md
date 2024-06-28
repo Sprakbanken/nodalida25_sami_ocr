@@ -30,8 +30,8 @@ See [tesseract_transcribe.ipynb](tesseract_transcribe.ipynb) for how to transcri
 
 # Training models with tesstrain 
 
-## Step1: install tesstrain and tesseract 
-Følg slik det står i dokumentasjonen til tesstrain repoet og tesseract repoet (todo: fyll inn her når jeg har reprodusert)
+## Step1: install tesstrain and tesseract dev tools
+Clone the [tesstrain repository](https://github.com/tesseract-ocr/tesstrain) and follow installation instructions in the README file. (If you've already installed tesseract you might be good to go)
 
 ## Step2: prepare data for training
 Make sure the data you want to use for fine-tuning is in `tesstrain/data/[model_name]-ground-truth` where `[model_name]` is the same as the MODEL_NAME parameter you pass to the training function.  
@@ -59,8 +59,9 @@ Continue training from your own model. Copy or move the `.traineddata` file to t
 
 ### Finally
 Run this command in the root of the tesstrain directory: 
-`make training MODEL_NAME=[model_name] START_MODEL=[lang] TESSDATA=$TESSDATA_PREFIX`
-Where `[lang]` is whatever comes before .traineddata of the model you want to continue training from. 
+`make training MODEL_NAME=[model_name] START_MODEL=[lang] TESSDATA=$TESSDATA_PREFIX`  
+Where `[lang]` is whatever comes before .traineddata of the model you want to continue training from.  
+You can optionally add other training parameters (such as `MAX_ITERATIONS`) as described in the tesstrain README.
 
 
 ## Step3b: train a tesseract model from scratch
