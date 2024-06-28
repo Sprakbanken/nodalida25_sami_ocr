@@ -3,3 +3,5 @@ tesstrain
 tesseract
 hugin-munin-ordbilder
 output/
+example_image.out.txt
+ground_truth/
