@@ -1,19 +1,32 @@
 
 
-# Inference with tesseract 
+# Inference with Tesseract 
 
-## Step1: install tesseract 
-Follow instructions in repo
+## Step1: install Tesseract 5
+Follow install instructions in [the official documentation](https://tesseract-ocr.github.io/tessdoc/Installation.html)  
+Confirm installation with `tesseract --version`
 
-## Step2: run OCR-model:
-Make sure you have the `.traineddata` file of the model you want to use for inference in your tessdata directory  
+## Step2: prepare model:
+Run `tesseract --list-langs` to see the available models  
+If you dont see the model you want to use, copy or move the `.traineddata` file of the model the tessdata directory.  
+Your tessdata directory may be something like `/usr/local/share/tessdata/` or `/usr/share/tesseract-ocr/5/tessdata/` depending on your installation.  
 
+Example:  
+`cp tesseract_models/nor_smx_15000.traineddata [path_to_tessdata]`  
+You may have to put sudo before cp to write to your tessdata repository
+
+## Step3: run OCR-model
 Run this command
 `tesseract [imagefile] [outputfile] -l [lang]`  
 Replace `[imagefile]` with the path to an image  
 Replace `[outputfile]` with the path to write the detected text (it will generate `[outputfile].txt`)
 Where `[lang]` is whatever comes before .traineddata of the model you want to use for inference
 
+Example:  
+`tesseract example_image.tif example_image.out -l nor_smx_15000`  
+In `example_image.out.txt` you will find the output of the model
+
+See [tesseract_transcribe.ipynb](tesseract_transcribe.ipynb) for how to transcribe multiple images with pytesseract
 
 # Training models with tesstrain 
 
