@@ -28,7 +28,7 @@ In `example_image.out.txt` you will find the output of the model
 
 See [tesseract_transcribe.ipynb](tesseract_transcribe.ipynb) for how to transcribe multiple images with pytesseract
 
-# Training models with tesstrain 
+# Training tesseract models with tesstrain 
 
 ## Step1: install tesstrain and tesseract dev tools
 Clone the [tesstrain repository](https://github.com/tesseract-ocr/tesstrain) and follow installation instructions in the README file. (If you've already installed tesseract you might be good to go after just cloning the repo)
@@ -80,4 +80,4 @@ Where `[lang]` is whatever comes before .traineddata of the model you want to co
 You can optionally add other training parameters (such as `MAX_ITERATIONS`) as described in the tesstrain README.
 
 
-[^1]: You can run this command in the terminal and it will last for your session, or you can paste it to your ~/.bashrc file and it will always be set (remember to `source ~/.bashrc` after changing the file)  
+[^1]: You can run this command in the terminal and it will last for your session, or you can paste it to your ~/.bashrc file and it will always be set (remember to `source ~/.bashrc` after changing the file)
