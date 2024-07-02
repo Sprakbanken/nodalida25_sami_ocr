@@ -36,7 +36,7 @@ Clone the [tesstrain repository](https://github.com/tesseract-ocr/tesstrain) and
 ## Step2: prepare data for training
 Make sure the data you want to use for fine-tuning is in `tesstrain/data/[model_name]-ground-truth` where `[model_name]` is the same as the MODEL_NAME parameter you pass to the training function.  
 In `tesstrain/data/[model_name]-ground-truth` you should have pairs of `[filename].tif` and `[filename].gt.txt` files, where the .tif file is a line image, and the .gt.txt file is the text in that line.  
-See [sample_data](sample_data/) for an example pair  
+See [sample_data](sample_data/) for an example pair, and the [data preparation guide](data_preparation_guide.md) for how to create this data from altoxml  
 
 ## Step3: train!
 
