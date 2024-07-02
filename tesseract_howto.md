@@ -50,13 +50,14 @@ You can optionally add other training parameters (such as `MAX_ITERATIONS`) as d
 
 #### First
 Set the `TESSDATA_PREFIX` environment variable to point to your tessdata directory:  
-`export TESSDATA_PREFIX=[your-tessdata-directory]`  
+`export TESSDATA_PREFIX=[your-tessdata-directory]`[^1]  
 (Replace `[your-tessdata-directory]` with the path to your tessdata directory, e.g `/usr/local/share/tessdata/`)  
-You can run this command in the terminal and it will last for your session, or you can paste it to your ~/.bashrc file and it will always be set (remember to `source ~/.bashrc` after changing the file)  
+
 Check that is has been set with `echo $TESSDATA_PREFIX` in the terminal
 
 #### Then
 Make sure you have the `.traineddata` file of the model you want to continue training from in your tessdata directory.   
+List all available models with `tesseract --list-langs`  
 
 option 1: 
 You can download a language base model from the tesseract repo like this:  
@@ -68,6 +69,8 @@ Continue training from your own model. Copy the `.traineddata` file to the tessd
 `cp [path_to_source_model].traineddata $TESSDATA_PREFIX`  
 Depending on access rights to the tessdata directory you might have to add `sudo` before `cp`.
 
+Confirm that the model is available now with `tesseract --list-langs`  
+
 #### Finally
 Navigate to the root of the tesstrain directory.  
 
@@ -76,3 +79,5 @@ Run this command:
 Where `[lang]` is whatever comes before .traineddata of the model you want to continue training from.  
 You can optionally add other training parameters (such as `MAX_ITERATIONS`) as described in the tesstrain README.
 
+
+[^1]: You can run this command in the terminal and it will last for your session, or you can paste it to your ~/.bashrc file and it will always be set (remember to `source ~/.bashrc` after changing the file)  
