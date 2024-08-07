@@ -4,13 +4,17 @@ from pathlib import Path
 from PIL import Image
 import pandas as pd
 import logging
+from utils import setup_logging
 
 from argparse import ArgumentParser
 from pathlib import Path
 from shutil import copy2, rmtree
 
+
+pil_logger = logging.getLogger("PIL")
+pil_logger.setLevel(logging.INFO)
+
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
 
 
 def get_annotations_for_image(image_path: Path | str) -> list[Annotation]:
@@ -67,7 +71,7 @@ def transkribus_export_to_words_pages(base_image_dir: Path, output_dir: Path) ->
                     bbox,
                     quality=100,
                 )
-                logger.info(f"Created {output_image_path}")
+                logger.debug(f"Created {output_image_path}")
             except Exception as ex:
                 logger.warn(ex)
                 logger.info(input_image_path, i)
@@ -119,11 +123,20 @@ if __name__ == "__main__":
     )
     parser.add_argument("output_dir", type=Path, help="The output directory")
     parser.add_argument(
+        "--log_level",
+        type=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+        help="Set the logging level",
+    )
+    parser.add_argument(
         "--keep_temp_dir",
         action="store_true",
         help="If flagged, keep <output_dir>/temp with pages, words and metadata.csv",
     )
     args = parser.parse_args()
+
+    setup_logging(source_script="transkribus_data_to_lines", log_level=args.log_level)
 
     temp_dir = args.output_dir / "temp"
     temp_dir.mkdir(parents=True)

@@ -1,7 +1,6 @@
 venv_samisk
 tesstrain
 tesseract
-hugin-munin-ordbilder
 output/
 example_image.out.txt
 data/
@@ -11,3 +10,5 @@ kladd.ipynb
 *.egg-info
 *__pycache__*
 .venv
+
+logs
