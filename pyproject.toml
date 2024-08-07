@@ -1,0 +1,18 @@
+[project]
+name = "samisk-ocr"
+version = "1.0.0"
+authors = [
+    {name = "Tita Enstad", email = "tita.enstad@nb.no"}
+]
+
+requires-python = ">=3.11"
+
+dependencies = [
+    "ordbilder@git+ssh://git@github.com/Sprakbanken/hugin-munin-ordbilder",
+    "pytesseract>=0.3.10",
+]
+
+[tool.setuptools.packages.find]
+where = ["scripts"] 
+
+[tool.pdm]

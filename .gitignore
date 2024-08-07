@@ -7,3 +7,7 @@ example_image.out.txt
 data/
 tesseract_models/divvungiellatekno
 kladd.ipynb
+
+*.egg-info
+*__pycache__*
+.venv
