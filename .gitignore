@@ -11,5 +11,6 @@ kladd.ipynb
 *__pycache__*
 .venv
 .pdm-python
+.ruff_cache
 
 logs
