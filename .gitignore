@@ -10,5 +10,6 @@ kladd.ipynb
 *.egg-info
 *__pycache__*
 .venv
+.pdm-python
 
 logs
