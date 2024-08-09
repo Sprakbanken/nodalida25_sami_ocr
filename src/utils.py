@@ -9,9 +9,9 @@ def setup_logging(source_script: str, log_level: str):
     # Set up logging
     log_filename = f"logs/{source_script}_{current_time}.log"
     logging.basicConfig(
-        filename=log_filename,
         level=getattr(logging, log_level),
         format="%(asctime)s - %(levelname)s - %(message)s",
+        handlers=[logging.FileHandler(log_filename), logging.StreamHandler()],
     )
 
 
