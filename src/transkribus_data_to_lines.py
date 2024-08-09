@@ -7,7 +7,6 @@ import logging
 from utils import setup_logging
 
 from argparse import ArgumentParser
-from pathlib import Path
 from shutil import copy2, rmtree
 
 
@@ -93,6 +92,7 @@ def transkribus_export_to_words_pages(base_image_dir: Path, output_dir: Path) ->
 
 
 def words_pages_to_lines(source_data_dir: Path, destination_data_dir: Path):
+    """Create .tif and .gt.txt line level transcriptions from ordbilder output"""
     metadata_df = pd.read_csv(source_data_dir / "metadata.csv")
 
     for e in metadata_df.itertuples():
@@ -149,4 +149,5 @@ if __name__ == "__main__":
 
     words_pages_to_lines(source_data_dir=temp_dir, destination_data_dir=args.output_dir)
 
-    rmtree(temp_dir)
+    if not args.keep_temp_dir:
+        rmtree(temp_dir)
