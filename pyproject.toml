@@ -17,6 +17,7 @@ dependencies = [
     "jiwer>=3.0.4",
     "pandas>=2.2.2",
     "Pillow>=10.4.0",
+    "plotly>=5.23.0",
 ]
 
 [tool.setuptools.packages.find]
