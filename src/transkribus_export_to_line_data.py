@@ -27,7 +27,8 @@ def transkribus_export_to_words_pages(base_image_dir: Path, output_dir: Path) ->
     https://github.com/Sprakbanken/hugin-munin-ordbilder/blob/main/scripts/create_unadjusted_dataset.py [Accessed: Aug 7, 2024].
 
     Modifications:
-    - Remove author information
+    - Remove auhor information
+    - Add rows even if image exists
     """
     rows = []
     for input_image_path in sorted(base_image_dir.glob("**/*.jpg")):
@@ -53,11 +54,21 @@ def transkribus_export_to_words_pages(base_image_dir: Path, output_dir: Path) ->
                 output_word_subdir
                 / f"{image_name}_{i:03d}_{x1:04d}_{y1:04d}_{x2:04d}_{y2:04d}.jpg"
             )
+            output_page_path = output_page_subdir / input_image_path.name
+
             if output_image_path.exists():
                 logger.info(f"{output_image_path} exists, skipping")
+                row = {
+                    "page_image": str(output_page_path.relative_to(output_dir)),
+                    "word_image": str(output_image_path.relative_to(output_dir)),
+                    "x1": x1,
+                    "y1": y1,
+                    "x2": x2,
+                    "y2": y2,
+                    "word": annotation["word"],
+                }
+                rows.append(row)
                 continue
-            # Create output page path
-            output_page_path = output_page_subdir / input_image_path.name
 
             # Create the page image
             output_page_path.parent.mkdir(exist_ok=True, parents=True)
@@ -87,6 +98,7 @@ def transkribus_export_to_words_pages(base_image_dir: Path, output_dir: Path) ->
                 "word": annotation["word"],
             }
             rows.append(row)
+
         dataset_df = pd.DataFrame(rows)
         dataset_df.to_csv(output_dir / "metadata.csv", index=False)
 
@@ -105,7 +117,7 @@ def words_pages_to_lines(source_data_dir: Path, destination_data_dir: Path):
         img = Image.open(line_image_path)
         img.save(new_image_path)
 
-        transcription = e.word
+        transcription = str(e.word)
         transcription = transcription.replace("\xa0", " ")
         text_path = destination_data_dir / f"{file_stem}.gt.txt"
         with text_path.open("w+") as f:
@@ -139,7 +151,7 @@ if __name__ == "__main__":
     setup_logging(source_script="transkribus_data_to_lines", log_level=args.log_level)
 
     temp_dir = args.output_dir / "temp"
-    temp_dir.mkdir(parents=True)
+    temp_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info(f"Created output directory in {args.output_dir}")
 
