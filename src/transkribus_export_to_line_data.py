@@ -103,8 +103,10 @@ def transkribus_export_to_words_pages(base_image_dir: Path, output_dir: Path) ->
         dataset_df.to_csv(output_dir / "metadata.csv", index=False)
 
 
-def words_pages_to_lines(source_data_dir: Path, destination_data_dir: Path):
-    """Create .tif and .gt.txt line level transcriptions from ordbilder output"""
+def words_pages_to_lines(
+    source_data_dir: Path, destination_data_dir: Path, txt_suffix: str
+):
+    """Create .tif and (.gt).txt line level transcriptions from ordbilder output"""
     metadata_df = pd.read_csv(source_data_dir / "metadata.csv")
 
     for e in metadata_df.itertuples():
@@ -117,16 +119,16 @@ def words_pages_to_lines(source_data_dir: Path, destination_data_dir: Path):
         img = Image.open(line_image_path)
         img.save(new_image_path)
 
-        transcription = str(e.word)
-        transcription = transcription.replace("\xa0", " ")
-        text_path = destination_data_dir / f"{file_stem}.gt.txt"
+        # convert numbers to strings and replace non-breaking space character with normal space
+        transcription = str(e.word).replace("\xa0", " ")
+        text_path = destination_data_dir / f"{file_stem}{txt_suffix}"
         with text_path.open("w+") as f:
             f.write(transcription)
 
 
 if __name__ == "__main__":
     parser = ArgumentParser(
-        description="Create .tif line images and .gt.txt line transcriptions from a transkribus export"
+        description="Create .tif line images and .txt line transcriptions from a transkribus export"
     )
     parser.add_argument(
         "base_image_dir",
@@ -146,6 +148,12 @@ if __name__ == "__main__":
         action="store_true",
         help="If flagged, keep <output_dir>/temp with pages, words and metadata.csv",
     )
+    parser.add_argument(
+        "--gt",
+        type=bool,
+        default=True,
+        help="If true, will save .txt files as .gt.txt (only .txt if false)",
+    )
     args = parser.parse_args()
 
     setup_logging(source_script="transkribus_data_to_lines", log_level=args.log_level)
@@ -158,8 +166,11 @@ if __name__ == "__main__":
     transkribus_export_to_words_pages(
         base_image_dir=args.base_image_dir, output_dir=temp_dir
     )
-
-    words_pages_to_lines(source_data_dir=temp_dir, destination_data_dir=args.output_dir)
+    words_pages_to_lines(
+        source_data_dir=temp_dir,
+        destination_data_dir=args.output_dir,
+        txt_suffix=".gt.txt" if args.gt else ".txt",
+    )
 
     if not args.keep_temp_dir:
         rmtree(temp_dir)
