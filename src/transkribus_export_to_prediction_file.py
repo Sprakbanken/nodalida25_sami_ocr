@@ -50,7 +50,9 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    setup_logging(source_script="tesseract_transcribe", log_level=args.log_level)
+    setup_logging(
+        source_script="transkribus_export_to_prediction_file", log_level=args.log_level
+    )
 
     args.output_dir.mkdir(exist_ok=True, parents=True)
 
