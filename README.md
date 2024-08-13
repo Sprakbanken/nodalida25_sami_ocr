@@ -11,17 +11,45 @@ Vi har transkribert vår egen data, som er en blanding av flere forskjellige sam
 Vi har også brukt dataen som Divvun & Giellatekno har på sin [github](https://github.com/divvungiellatekno/tesstrain/tree/main/training-data), som er nordsamisk data (sme).
 
 ## Modeller
-Modellene er navngitt eller eventuelle basemodeller og antall epoker de er trent.
-Eksempel:
-```
-est_smx_2000.traineddata
-```
-est: modellen er basert på den estiske basemodellen som finnes i [tessdata_best-repoet](https://github.com/tesseract-ocr/tessdata_best).
-smx: den er finetuned på vårt transkriberte datasett
-2000: den er trent i 2000 epoker
-
-smx er en liksom-iso-kode for samlingen av flere samiske språk.
-Når det står smx2 i modellnavnet betyr det vår transkriberte data + Divvun & Giellatekno sin data
+Modellene ligger i [tesseract_models](tesseract_models)
+Les mer om modellene i [README-fila](tesseract_models/README.md)
 
 ## Resultater
 TBA
+
+
+## Installasjon
+Du kan lage et virtuelt pythonmiljø og installere slik:
+(fordrer at du har riktig versjon av python og at venv er installert)
+```
+python3 -m venv <navn-på-miljøet>
+. <navn-på-miljøet>/bin/activate
+pip install .
+```
+
+Eller hvis du liker pdm:
+```
+python3 -m pip install pdm # installer pdm hvis du ikke har
+pdm install
+```
+
+## Kodemoduler
+Alle skriptene kan kjøres med
+```
+python -m <skriptnavn>
+```
+eller, med pdm
+```
+pdm run python -m <skriptnavn>
+```
+Legg til `--help` for å få mer informasjon om argumenter
+
+[transkribus_export_to_line_data](src/transkribus_export_to_line_data.py) tar en transkribus-export med bilder og transkripsjoner og gjør det om til bildefiler og tekstfiler på linjenivå (brukes til trening)
+
+[tesseract_transcribe](src/tesseract_transcribe.py) transkribere alle bildene i en mappe med en valgfri tesseract-modell og skriver resultatene i en .csv-fil
+
+[transkribus_export_to_prediction_file](src/transkribus_export_to_prediction_file.py) tar en transkribus-export med bilder og transkripsjoner og lager en fil med samme struktur som tesseract transcribe
+
+[evaluate_predictions](src/evaluate_predictions.py) tar inn en .csv-fil (output fra de to over) og regner ut WER og CER på samling, side og linjenivå
+
+[find_bad_boxes](src/find_bad_boxes.py) er en hjelpefunksjon for å finne tilfeller der boksene
