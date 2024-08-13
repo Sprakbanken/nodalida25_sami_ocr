@@ -13,12 +13,24 @@ pil_logger.setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def transcribe(model_name: str, image_dir: Path) -> pd.DataFrame:
+def transcribe(
+    model_name: str,
+    image_dir: Path,
+    line_level: bool,
+    img_suffixes: list[str] = [".jpg", ".png", ".tif"],
+) -> pd.DataFrame:
     """Run tesseract model on all files in image_dir"""
     transcriptions = {"model_name": [], "image": [], "transcription": []}
-    images = list(image_dir.glob("*.jpg"))
+    images = [e for suf in img_suffixes for e in image_dir.glob(f"*{suf}")]
+
+    tesseract_config = ""
+    if line_level:
+        tesseract_config = "--psm 7"
+
     for img in tqdm(images):
-        transcription = pytesseract.image_to_string(Image.open(img), lang=model_name)
+        transcription = pytesseract.image_to_string(
+            Image.open(img), lang=model_name, config=tesseract_config
+        )
         if not transcription:
             logger.debug(f"No transcription for {img}")
             logger.debug(transcription)
@@ -27,20 +39,6 @@ def transcribe(model_name: str, image_dir: Path) -> pd.DataFrame:
         transcriptions["transcription"].append(transcription)
 
     df = pd.DataFrame(transcriptions)
-    return df
-
-
-def find_gt(image_dir: Path, df: pd.DataFrame) -> pd.DataFrame:
-    texts = []
-    for e in df.itertuples():
-        filename_stem = Path(e.image).stem
-        gt_text_file = image_dir / "txt" / f"{filename_stem}.txt"
-        if not gt_text_file.exists():
-            logger.warning(f"Could not find ground truth file for image {e.image}")
-            texts.append("")
-            continue
-        texts.append(gt_text_file.read_text())
-    df["ground_truth"] = texts
     return df
 
 
@@ -56,14 +54,15 @@ if __name__ == "__main__":
         help="The directory containing images to be transcribed",
     )
     parser.add_argument(
-        "output_dir",
+        "--output_dir",
         type=Path,
         help="The output directory to store predicted transcriptions",
+        default=Path("output/predictions/"),
     )
     parser.add_argument(
-        "--find_gt",
+        "--line",
         action="store_true",
-        help="If flagged, will try to read ground truth data from image_dir/txt",
+        help="If flagged, will treat images as line level",
     )
     parser.add_argument(
         "--log_level",
@@ -76,16 +75,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
     setup_logging(source_script="tesseract_transcribe", log_level=args.log_level)
 
-    args.output_dir.mkdir(exist_ok=True, parents=True)
-
-    df = transcribe(model_name=args.model_name, image_dir=args.image_dir)
-
-    if args.find_gt:
-        df = find_gt(df=df, image_dir=args.image_dir)
-
-    output_csv = (
-        args.output_dir / f"{args.image_dir.name}_{args.model_name}_predictions.csv"
+    df = transcribe(
+        model_name=args.model_name, image_dir=args.image_dir, line_level=args.line
     )
+
+    if args.line:
+        output_dir = args.output_dir / "line_level"
+    else:
+        output_dir = args.output_dir / "page_level"
+
+    output_dir.mkdir(exist_ok=True, parents=True)
+
+    output_csv = output_dir / f"{args.image_dir.name}_{args.model_name}_predictions.csv"
 
     df.to_csv(output_csv, index=False)
     logger.info(f"Wrote predicted transcriptions to {output_csv}")
