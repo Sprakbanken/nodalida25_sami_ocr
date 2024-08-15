@@ -80,7 +80,7 @@ def copy_lines(df_map: dict[str, pd.DataFrame], output_dir: Path) -> None:
 if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
-    setup_logging(source_script="tesseract_transcribe", log_level=args.log_level)
+    setup_logging(source_script="find_bad_boxes", log_level=args.log_level)
 
     if args.copy_lines and not args.output_dir:
         logger.error("If copy_lines is flagged, output_dir must be provided")
