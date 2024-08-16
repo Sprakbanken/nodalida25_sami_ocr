@@ -10,15 +10,19 @@ pil_logger.setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def read_text_files(image_dir: Path, df: pd.DataFrame) -> pd.DataFrame:
+def read_text_files(image_dir: Path, df: pd.DataFrame, line: bool) -> pd.DataFrame:
     texts = []
+    text_dir = image_dir / "txt"
+    if line:
+        text_dir = image_dir
+
     for e in df.itertuples():
         filename_stem = Path(e.image).stem
-        gt_text_file = image_dir / "txt" / f"{filename_stem}.txt"
-        if not gt_text_file.exists():
+        text_file = text_dir / f"{filename_stem}.txt"
+        if not text_file.exists():
             logger.error(f"Could not find textfile for image {e.image}")
             exit()
-        texts.append(gt_text_file.read_text())
+        texts.append(text_file.read_text())
     df["transcription"] = texts
     return df
 
@@ -37,9 +41,15 @@ if __name__ == "__main__":
         help="The directory containing image files and txt/ directory with transcription files",
     )
     parser.add_argument(
-        "output_dir",
+        "--output_dir",
         type=Path,
         help="The output directory to store predicted transcriptions",
+        default="output/predictions",
+    )
+    parser.add_argument(
+        "--line",
+        action="store_true",
+        help="If flagged, look for line level transcriptions in same directory as images",
     )
     parser.add_argument(
         "--log_level",
@@ -53,17 +63,22 @@ if __name__ == "__main__":
     setup_logging(
         source_script="transkribus_export_to_prediction_file", log_level=args.log_level
     )
+    if args.line:
+        output_dir = args.output_dir / "line_level"
+    else:
+        output_dir = args.output_dir / "page_level"
 
-    args.output_dir.mkdir(exist_ok=True, parents=True)
+    output_dir.mkdir(exist_ok=True, parents=True)
 
-    images = [img.name for img in args.input_dir.glob("*.jpg")]
+    images = [img.name for img in args.input_dir.glob("*.jpg")] + [
+        img.name for img in args.input_dir.glob("*.tif")
+    ]
 
     df = pd.DataFrame({"image": images})
-    df = read_text_files(df=df, image_dir=args.input_dir)
+    df["model_name"] = [args.model_name] * len(df)
+    df = read_text_files(df=df, image_dir=args.input_dir, line=args.line)
 
-    output_csv = (
-        args.output_dir / f"{args.input_dir.name}_{args.model_name}_predictions.csv"
-    )
+    output_csv = output_dir / f"{args.input_dir.name}_{args.model_name}_predictions.csv"
 
     df.to_csv(output_csv, index=False)
     logger.info(f"Wrote predicted transcriptions to {output_csv}")
