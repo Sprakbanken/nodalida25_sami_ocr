@@ -64,12 +64,20 @@ def evaluate_line_level(
     )
 
 
-def find_gt(img_path: Path, gt_dir: Path) -> Path:
-    try:
-        return next(gt_dir.glob(f"{img_path.stem}*.txt"))
-    except Exception as _:
-        logger.error(f"Couldn't find transcription for image {img_path} in {gt_dir}")
-        exit()
+def find_gt(img_path: Path, gt_dir: Path, line: bool) -> Path:
+    exact_match = next(gt_dir.glob(f"{img_path.stem}*.txt"), None)
+    if exact_match:
+        return exact_match
+    if line:
+        stem_stem = img_path.stem[:-20]
+        almost_match = next(gt_dir.glob(f"{stem_stem}*.txt"), None)
+        if almost_match:
+            logger.debug(
+                f"Couldn't find exact transcription filename match for line image {img_path} in {gt_dir}, but found match for {stem_stem}: {almost_match}"
+            )
+            return almost_match
+    logger.error(f"Couldn't find transcription for image {img_path} in {gt_dir}")
+    exit()
 
 
 if __name__ == "__main__":
@@ -115,7 +123,7 @@ if __name__ == "__main__":
     df["transcription"] = df.transcription.apply(str)
 
     ground_truth_paths = df.image.apply(Path).apply(
-        partial(find_gt, gt_dir=args.transcriptions)
+        partial(find_gt, gt_dir=args.transcriptions, line=args.line)
     )
     df["ground_truth"] = ground_truth_paths.apply(lambda p: p.read_text())
 
