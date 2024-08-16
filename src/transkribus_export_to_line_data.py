@@ -189,12 +189,11 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--gt",
-        type=bool,
-        default=True,
-        help="If true, will save .txt files as .gt.txt (only .txt if false)",
+        type=int,
+        default=1,
+        help="If 1, will save .txt files as .gt.txt (only .txt if 0)",
     )
     args = parser.parse_args()
-
     setup_logging(source_script="transkribus_data_to_lines", log_level=args.log_level)
 
     temp_dir = args.output_dir / "temp"
