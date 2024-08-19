@@ -6,6 +6,9 @@ from jiwer import wer, cer
 import logging
 import json
 from functools import partial
+from map_transkribus_lines_to_gt_lines import (
+    map_transkribus_image_lines_to_gt_image_lines,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -64,18 +67,10 @@ def evaluate_line_level(
     )
 
 
-def find_gt(img_path: Path, gt_dir: Path, line: bool) -> Path:
+def find_gt(img_path: Path, gt_dir: Path) -> Path:
     exact_match = next(gt_dir.glob(f"{img_path.stem}*.txt"), None)
     if exact_match:
         return exact_match
-    if line:
-        stem_stem = img_path.stem[:-20]
-        almost_match = next(gt_dir.glob(f"{stem_stem}*.txt"), None)
-        if almost_match:
-            logger.debug(
-                f"Couldn't find exact transcription filename match for line image {img_path} in {gt_dir}, but found match for {stem_stem}: {almost_match}"
-            )
-            return almost_match
     logger.error(f"Couldn't find transcription for image {img_path} in {gt_dir}")
     exit()
 
@@ -88,7 +83,7 @@ if __name__ == "__main__":
         help=".csv file with predicted transcriptions",
     )
     parser.add_argument(
-        "transcriptions",
+        "gt_transcriptions",
         type=Path,
         help="The directory containing ground truth transcriptions (.txt-files)",
     )
@@ -109,6 +104,11 @@ if __name__ == "__main__":
         help="If flagged, will assume line level predictions (and page level if not flagged)",
     )
     parser.add_argument(
+        "--map_transkribus",
+        action="store_true",
+        help="If flagged, will map transkribus line bboxes to closest ground truth bboxes",
+    )
+    parser.add_argument(
         "--log_level",
         type=str,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
@@ -122,8 +122,13 @@ if __name__ == "__main__":
     df = pd.read_csv(args.predictions)
     df["transcription"] = df.transcription.apply(str)
 
+    if args.map_transkribus:
+        df["image"] = map_transkribus_image_lines_to_gt_image_lines(
+            transkribus_df=df, gt_image_dir=args.gt_transcriptions
+        )
+
     ground_truth_paths = df.image.apply(Path).apply(
-        partial(find_gt, gt_dir=args.transcriptions, line=args.line)
+        partial(find_gt, gt_dir=args.gt_transcriptions)
     )
     df["ground_truth"] = ground_truth_paths.apply(lambda p: p.read_text())
 

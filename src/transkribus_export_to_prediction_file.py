@@ -78,7 +78,7 @@ if __name__ == "__main__":
     df["model_name"] = [args.model_name] * len(df)
     df = read_text_files(df=df, image_dir=args.input_dir, line=args.line)
 
-    output_csv = output_dir / f"{args.input_dir.name}_{args.model_name}_predictions.csv"
+    output_csv = output_dir / f"{args.model_name}_predictions.csv"
 
     df.to_csv(output_csv, index=False)
     logger.info(f"Wrote predicted transcriptions to {output_csv}")
