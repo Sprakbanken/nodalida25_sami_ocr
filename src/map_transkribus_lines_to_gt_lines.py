@@ -1,9 +1,7 @@
 import pandas as pd
 from pathlib import Path
-from collections import namedtuple
 from functools import partial
-
-Bbox = namedtuple("Bbox", ["xmin", "ymin", "xmax", "ymax"])
+from utils import Bbox, image_stem_to_urn_line_bbox
 
 
 def calculate_overlap_area(bbox1: Bbox, bbox2: Bbox) -> float:
@@ -40,12 +38,6 @@ def calculate_overlap_area(bbox1: Bbox, bbox2: Bbox) -> float:
     return overlap_percent
 
 
-def image_stem_to_urn_line_bbox(image_stem: str) -> tuple[str, int, Bbox]:
-    bbox = Bbox(*[int(e) for e in image_stem[-19:].split("_")])
-    urn, line = image_stem[:-20].rsplit("_", maxsplit=1)
-    return (urn, line, bbox)
-
-
 def line_image_dir_to_urn_line_bbox_df(
     image_dir: Path, image_suffixes=[".tif", ".png", ".jpg"]
 ) -> pd.DataFrame:
@@ -60,7 +52,7 @@ def line_image_dir_to_urn_line_bbox_df(
 
 
 def map_transkribus_image_lines_to_gt_image_lines(
-    transkribus_df: pd.DataFrame, gt_image_dir: Path, logger=None
+    transkribus_df: pd.DataFrame, gt_image_dir: Path
 ) -> pd.Series:
     """Find the line images from the ground truth image directory that has the largest overlaps with the transkribus line images"""
     gt_df = line_image_dir_to_urn_line_bbox_df(image_dir=gt_image_dir)
