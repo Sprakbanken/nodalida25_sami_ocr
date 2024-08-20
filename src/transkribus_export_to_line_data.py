@@ -104,8 +104,8 @@ def transkribus_export_to_words_pages(
             }
             rows.append(row)
 
-        dataset_df = pd.DataFrame(rows)
-        dataset_df.to_csv(output_dir / "metadata.csv", index=False)
+    dataset_df = pd.DataFrame(rows)
+    dataset_df.to_csv(output_dir / "metadata.csv", index=False)
 
 
 def words_pages_to_lines(
@@ -114,13 +114,15 @@ def words_pages_to_lines(
     txt_suffix: str,
     rotate: bool,
     remove: bool,
+    remove_n: int,
 ):
     """Create .tif and (.gt).txt line level transcriptions from ordbilder output"""
     metadata_df = pd.read_csv(source_data_dir / "metadata.csv")
 
     copied = 0
     rotated = 0
-    removed = 0
+    removed_wh = 0
+    removed_short = 0
 
     for e in metadata_df.itertuples():
         line_image_path = source_data_dir / e.word_image
@@ -135,16 +137,23 @@ def words_pages_to_lines(
             logger.debug(
                 f"Skipping image {e.word_image} (width to height ratio too small)"
             )
-            removed += 1
+            removed_wh += 1
             continue
+
+        # convert numbers to strings and replace non-breaking space character with normal space
+        transcription = str(e.word).replace("\xa0", " ")
+
+        if remove_n and len(transcription) < remove_n:
+            logger.debug(f"Skipping image {e.word_image} (transcription too short)")
+            removed_short += 1
+            continue
+
         file_stem = line_image_path.stem
         new_image_path = destination_data_dir / f"{file_stem}.tif"
 
         img.save(new_image_path)
         copied += 1
 
-        # convert numbers to strings and replace non-breaking space character with normal space
-        transcription = str(e.word).replace("\xa0", " ")
         text_path = destination_data_dir / f"{file_stem}{txt_suffix}"
         with text_path.open("w+") as f:
             f.write(transcription)
@@ -152,7 +161,10 @@ def words_pages_to_lines(
         f"Copied {copied} line images and transcriptions to {destination_data_dir}"
     )
     logger.info(f"{rotated} images were rotated due to width/height ratio")
-    logger.info(f"{removed} images were skipped due to width/height ratio")
+    logger.info(f"{removed_wh} images were skipped due to width/height ratio")
+    logger.info(
+        f"{removed_short} images were skipped due to transcriptions shorter than {remove_n}"
+    )
 
 
 if __name__ == "__main__":
@@ -183,9 +195,15 @@ if __name__ == "__main__":
         help="If flagged, rotate images where width is less than half of height",
     )
     parser.add_argument(
-        "--remove",
+        "--remove_wh_ratio",
         action="store_true",
         help="If flagged, remove files where width is less than height",
+    )
+    parser.add_argument(
+        "--remove_short",
+        type=int,
+        help="Remove files where transcription length in less than N (nothing removed if N=0)",
+        default=0,
     )
     parser.add_argument(
         "--gt",
@@ -209,7 +227,8 @@ if __name__ == "__main__":
         destination_data_dir=args.output_dir,
         txt_suffix=".gt.txt" if args.gt else ".txt",
         rotate=args.rotate,
-        remove=args.remove,
+        remove=args.remove_wh_ratio,
+        remove_n=args.remove_short,
     )
 
     if not args.keep_temp_dir:
