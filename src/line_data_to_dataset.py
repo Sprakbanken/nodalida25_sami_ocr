@@ -33,6 +33,9 @@ def create_dataset_df(
     df["text"] = text_paths.apply(lambda x: x.read_text())
     df["text_len"] = text_paths.apply(str).apply(len)
 
+    for e in text_paths:
+        e.unlink()
+
     image_stems = image_paths.apply(lambda x: x.stem)
     urns, pages, lines, bboxes = zip(
         *image_stems.apply(image_stem_to_urn_page_line_bbox)
