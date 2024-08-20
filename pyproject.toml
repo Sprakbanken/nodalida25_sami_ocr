@@ -19,6 +19,8 @@ dependencies = [
     "Pillow>=10.4.0",
     "plotly>=5.23.0",
     "datasets>=2.21.0",
+    "nb-tokenizer>=0.1.0",
+    "wordcloud>=1.9.3",
 ]
 
 [tool.setuptools.packages.find]
