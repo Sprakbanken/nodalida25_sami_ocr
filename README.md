@@ -10,6 +10,8 @@ Vi har transkribert vår egen data, som er en blanding av flere forskjellige sam
 
 Vi har også brukt dataen som Divvun & Giellatekno har på sin [github](https://github.com/divvungiellatekno/tesstrain/tree/main/training-data), som er nordsamisk data (sme).
 
+I tillegg har vi automatisk transkribert side 30 fra en rekke samiske bøker med en modelle vi har trent i transkribus. Dette for å få litt volum på datamengden, om enn noe lavere kvalitet. 
+
 ## Modeller
 Modellene ligger i [tesseract_models](tesseract_models)
 Les mer om modellene i [README-fila](tesseract_models/README.md)
