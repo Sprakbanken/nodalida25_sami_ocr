@@ -31,9 +31,19 @@ def transcribe(
         transcription = pytesseract.image_to_string(
             Image.open(img), lang=model_name, config=tesseract_config
         )
+        if line_level and not transcription:
+            logger.debug(f"No transcription for {img}")
+            logger.debug(
+                "Trying to transcribe with --psm 8 (treat image as single word)"
+            )
+            transcription = pytesseract.image_to_string(
+                Image.open(img), lang=model_name, config="--psm 8"
+            )
+
         if not transcription:
             logger.debug(f"No transcription for {img}")
             logger.debug(transcription)
+
         transcriptions["image"].append(img.name)
         transcriptions["model_name"].append(model_name)
         transcriptions["transcription"].append(transcription)
