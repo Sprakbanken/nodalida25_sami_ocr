@@ -13,6 +13,20 @@ from map_transkribus_lines_to_gt_lines import (
 logger = logging.getLogger(__name__)
 
 
+def urn_to_langcode(urn: str) -> str:
+    df = pd.read_csv("data/testset_languages.tsv", sep="\t")
+
+    # expect full match on page level
+    if urn in df.side_filnavn:
+        return df[df.side_filnavn == urn].språkkode.item()
+
+    # line level images contain line number and bbox information in filename
+    for e in df.side_filnavn:
+        if e in urn:
+            return df[df.side_filnavn == e].språkkode.item()
+    return None
+
+
 def evaluate_collection_level(df: pd.DataFrame) -> tuple[float, float]:
     """Calculate WER and CER across rows in df"""
     coll_wer = wer(
@@ -126,6 +140,8 @@ if __name__ == "__main__":
         df["image"] = map_transkribus_image_lines_to_gt_image_lines(
             transkribus_df=df, gt_image_dir=args.gt_transcriptions
         )
+
+    df["langcode"] = df.image.apply(lambda x: Path(x).stem).apply(urn_to_langcode)
 
     ground_truth_paths = df.image.apply(Path).apply(
         partial(find_gt, gt_dir=args.gt_transcriptions)
