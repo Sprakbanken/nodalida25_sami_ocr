@@ -1,7 +1,7 @@
 from argparse import ArgumentParser
 import pandas as pd
 from pathlib import Path
-from utils import setup_logging, clean_transcriptions
+from samisk_ocr.utils import setup_logging, clean_transcriptions
 from Levenshtein import distance
 import logging
 from shutil import copy2

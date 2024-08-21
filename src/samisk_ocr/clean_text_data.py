@@ -1,5 +1,5 @@
 from pathlib import Path
-from utils import setup_logging
+from samisk_ocr.utils import setup_logging
 import logging
 from argparse import ArgumentParser
 

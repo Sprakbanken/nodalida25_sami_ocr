@@ -23,7 +23,9 @@ dependencies = [
     "wordcloud>=1.9.3",
 ]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [tool.pdm]
+distribution = true

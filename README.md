@@ -46,12 +46,12 @@ pdm run python -m <skriptnavn>
 ```
 Legg til `--help` for å få mer informasjon om argumenter
 
-[transkribus_export_to_line_data](src/transkribus_export_to_line_data.py) tar en transkribus-export med bilder og transkripsjoner og gjør det om til bildefiler og tekstfiler på linjenivå (brukes til trening)
+[transkribus_export_to_line_data](src/samisk_ocr/transkribus_export_to_line_data.py) tar en transkribus-export med bilder og transkripsjoner og gjør det om til bildefiler og tekstfiler på linjenivå (brukes til trening)
 
-[tesseract_transcribe](src/tesseract_transcribe.py) transkribere alle bildene i en mappe med en valgfri tesseract-modell og skriver resultatene i en .csv-fil
+[tesseract_transcribe](src/samisk_ocr/tesseract_transcribe.py) transkribere alle bildene i en mappe med en valgfri tesseract-modell og skriver resultatene i en .csv-fil
 
-[transkribus_export_to_prediction_file](src/transkribus_export_to_prediction_file.py) tar en transkribus-export med bilder og transkripsjoner og lager en fil med samme struktur som tesseract transcribe
+[transkribus_export_to_prediction_file](src/samisk_ocr/transkribus_export_to_prediction_file.py) tar en transkribus-export med bilder og transkripsjoner og lager en fil med samme struktur som tesseract transcribe
 
-[evaluate_predictions](src/evaluate_predictions.py) tar inn en .csv-fil (output fra de to over) og regner ut WER og CER på samling, side og linjenivå
+[evaluate_predictions](src/samisk_ocr/evaluate_predictions.py) tar inn en .csv-fil (output fra de to over) og regner ut WER og CER på samling, side og linjenivå
 
-[find_bad_boxes](src/find_bad_boxes.py) er en hjelpefunksjon for å finne tilfeller der boksene
+[find_bad_boxes](src/samisk_ocr/find_bad_boxes.py) er en hjelpefunksjon for å finne tilfeller der boksene
