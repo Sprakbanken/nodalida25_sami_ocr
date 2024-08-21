@@ -2,7 +2,7 @@ from pathlib import Path
 from PIL import Image
 import pandas as pd
 import logging
-from utils import setup_logging, image_stem_to_urn_page_line_bbox
+from samisk_ocr.utils import setup_logging, image_stem_to_urn_page_line_bbox
 from datasets import load_dataset
 
 from argparse import ArgumentParser

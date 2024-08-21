@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 import logging
-from utils import setup_logging
+from samisk_ocr.utils import setup_logging
 from argparse import ArgumentParser
 
 pil_logger = logging.getLogger("PIL")

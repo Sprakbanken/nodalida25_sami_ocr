@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 import pandas as pd
 from pathlib import Path
-from utils import setup_logging
+from samisk_ocr.utils import setup_logging
 from jiwer import wer, cer
 import logging
 import json
 from functools import partial
-from map_transkribus_lines_to_gt_lines import (
+from samisk_ocr.map_transkribus_lines_to_gt_lines import (
     map_transkribus_image_lines_to_gt_image_lines,
 )
 

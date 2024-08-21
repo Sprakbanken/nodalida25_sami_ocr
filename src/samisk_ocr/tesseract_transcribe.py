@@ -4,7 +4,7 @@ from PIL import Image
 import pytesseract
 from tqdm import tqdm
 import logging
-from utils import setup_logging
+from samisk_ocr.utils import setup_logging
 from argparse import ArgumentParser
 
 pil_logger = logging.getLogger("PIL")
