@@ -26,7 +26,7 @@ Example:
 `tesseract example_image.tif example_image.out -l nor_smx_15000`
 In `example_image.out.txt` you will find the output of the model
 
-See [tesseract_transcribe.py](src/tesseract_transcribe.py) for how to transcribe multiple images with pytesseract
+See [tesseract_transcribe.py](src/samisk_ocr/tesseract_transcribe.py) for how to transcribe multiple images with pytesseract
 
 # Training tesseract models with tesstrain
 

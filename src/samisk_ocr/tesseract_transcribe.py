@@ -1,11 +1,13 @@
-import pandas as pd
-from pathlib import Path
-from PIL import Image
-import pytesseract
-from tqdm import tqdm
 import logging
-from utils import setup_logging
 from argparse import ArgumentParser
+from pathlib import Path
+
+import pandas as pd
+import pytesseract
+from PIL import Image
+from tqdm import tqdm
+
+from samisk_ocr.utils import setup_logging
 
 pil_logger = logging.getLogger("PIL")
 pil_logger.setLevel(logging.INFO)
@@ -33,9 +35,7 @@ def transcribe(
         )
         if line_level and not transcription:
             logger.debug(f"No transcription for {img}")
-            logger.debug(
-                "Trying to transcribe with --psm 8 (treat image as single word)"
-            )
+            logger.debug("Trying to transcribe with --psm 8 (treat image as single word)")
             transcription = pytesseract.image_to_string(
                 Image.open(img), lang=model_name, config="--psm 8"
             )
@@ -85,9 +85,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     setup_logging(source_script="tesseract_transcribe", log_level=args.log_level)
 
-    df = transcribe(
-        model_name=args.model_name, image_dir=args.image_dir, line_level=args.line
-    )
+    df = transcribe(model_name=args.model_name, image_dir=args.image_dir, line_level=args.line)
 
     if args.line:
         output_dir = args.output_dir / "line_level"

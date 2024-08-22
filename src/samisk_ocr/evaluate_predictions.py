@@ -1,16 +1,18 @@
-from argparse import ArgumentParser
-import pandas as pd
-from pathlib import Path
-from utils import setup_logging
-from jiwer import wer, cer
-import logging
 import json
+import logging
+from argparse import ArgumentParser
+from collections import Counter
 from functools import partial
-from map_transkribus_lines_to_gt_lines import (
+from pathlib import Path
+from string import punctuation, whitespace
+
+import pandas as pd
+from jiwer import cer, wer
+
+from samisk_ocr.map_transkribus_lines_to_gt_lines import (
     map_transkribus_image_lines_to_gt_image_lines,
 )
-from string import punctuation, whitespace
-from collections import Counter
+from samisk_ocr.utils import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -32,51 +34,35 @@ def urn_to_langcode(urn: str) -> str:
 def get_language_specific_chars(base_model_language: str) -> list[str]:
     match base_model_language:
         case "nor":
-            base_language_alphabet = (
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÆØåæø"
-            )
+            base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÆØåæø"
         case "eng":
-            base_language_alphabet = (
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-            )
+            base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         case "est":
             base_language_alphabet = (
                 "ABDEFFGHIJKLMNOPRSTUVZZabdeffghijklmnoprstuvzzÄÕÖÜäõöüŠŠššŽŽžž"
             )
         case "fin":
-            base_language_alphabet = (
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÄÖåäö"
-            )
+            base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÄÖåäö"
         case _:
             logger.warning(
                 f"No alphabet found for base model language {base_model_language}, using default alphabet (eng)"
             )
-            base_language_alphabet = (
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-            )
+            base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
     test_chars = Path("data/testset_characters.txt").read_text()
     not_letters = punctuation + whitespace + "«»–§"
     special_letters = [
-        c
-        for c in test_chars
-        if c not in base_language_alphabet + not_letters and not c.isnumeric()
+        c for c in test_chars if c not in base_language_alphabet + not_letters and not c.isnumeric()
     ]
     return special_letters
 
 
-def evaluate_collection_level(
-    df: pd.DataFrame, special_chars: list[str] = []
-) -> dict[str, float]:
+def evaluate_collection_level(df: pd.DataFrame, special_chars: list[str] = []) -> dict[str, float]:
     """Calculate WER and CER across rows in df"""
 
     scores = {}
-    scores["WER"] = wer(
-        reference=df.ground_truth.to_list(), hypothesis=df.transcription.to_list()
-    )
-    scores["CER"] = cer(
-        reference=df.ground_truth.to_list(), hypothesis=df.transcription.to_list()
-    )
+    scores["WER"] = wer(reference=df.ground_truth.to_list(), hypothesis=df.transcription.to_list())
+    scores["CER"] = cer(reference=df.ground_truth.to_list(), hypothesis=df.transcription.to_list())
 
     if special_chars:
         reference_counters = df.ground_truth.apply(Counter)
@@ -86,9 +72,7 @@ def evaluate_collection_level(
             false_positives = 0
             false_negatives = 0
             scores[char] = {}
-            for ref_counter, hyp_counter in zip(
-                reference_counters, hypothesis_counters
-            ):
+            for ref_counter, hyp_counter in zip(reference_counters, hypothesis_counters):
                 ref_count = ref_counter[char]
                 hyp_count = hyp_counter[char]
                 if ref_count == hyp_count:
@@ -106,9 +90,7 @@ def evaluate_collection_level(
                 # The model never predicted the character
                 scores[char]["Precision"] = 0
             else:
-                scores[char]["Precision"] = true_positives / (
-                    true_positives + false_positives
-                )
+                scores[char]["Precision"] = true_positives / (true_positives + false_positives)
             scores[char]["Recall"] = true_positives / (true_positives + false_negatives)
             scores[char]["F1"] = (2 * true_positives) / (
                 2 * true_positives + false_positives + false_negatives
@@ -130,9 +112,7 @@ def evaluate_each_row(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def evaluate_line_level(
-    ground_truth: str, predicted_transcription: str
-) -> pd.DataFrame:
+def evaluate_line_level(ground_truth: str, predicted_transcription: str) -> pd.DataFrame:
     """Calculate WER and CER for each line in the texts (assumes text is page level/multiple lines)"""
     ground_truth_lines = [line for line in ground_truth.split("\n") if line]
     prediction_lines = [line for line in predicted_transcription.split("\n") if line]
@@ -231,9 +211,7 @@ if __name__ == "__main__":
 
     df["langcode"] = df.image.apply(lambda x: Path(x).stem).apply(urn_to_langcode)
 
-    ground_truth_paths = df.image.apply(Path).apply(
-        partial(find_gt, gt_dir=args.gt_transcriptions)
-    )
+    ground_truth_paths = df.image.apply(Path).apply(partial(find_gt, gt_dir=args.gt_transcriptions))
     df["ground_truth"] = ground_truth_paths.apply(lambda p: p.read_text())
 
     if args.line:

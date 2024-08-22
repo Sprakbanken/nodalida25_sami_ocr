@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image
 import pandas as pd
 import logging
-from utils import setup_logging
+from samisk_ocr.utils import setup_logging
 
 from argparse import ArgumentParser
 from shutil import copy2, rmtree

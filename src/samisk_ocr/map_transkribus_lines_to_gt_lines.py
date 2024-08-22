@@ -1,7 +1,7 @@
 import pandas as pd
 from pathlib import Path
 from functools import partial
-from utils import Bbox, image_stem_to_urn_line_bbox
+from samisk_ocr.utils import Bbox, image_stem_to_urn_line_bbox
 
 
 def calculate_overlap_area(bbox1: Bbox, bbox2: Bbox) -> float:
