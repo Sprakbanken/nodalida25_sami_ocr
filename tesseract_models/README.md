@@ -26,6 +26,10 @@ nor_smx_201.traineddata
 - trent på originaldataen + dataprosessering a, b, c (x=5) og d
 - trent i 1 epoke
 
+nor_smx_202.traineddata
+- videretrent fra nor_smx_201.traineddata
+- trent i 1 epoke, med samme data som 201
+
 nor_smx_205.traineddata
 - videretrent fra nor_smx_205.traineddata
 - med 10x lavere learning rate enn default (0.0002)
@@ -36,11 +40,18 @@ nor_smx_206.traineddata
 - trent på originaldataen + dataprosessering a, b, c (x=5) og d
 - trent i 1 epoke
 
+nor_smx_207.traineddata
+- videretrent fra nor_smx_206.traineddata
+- trent i 1 epoke, med samme data som 206
+
+nor_smx_209.traineddata
+- videretrent fra nor_smx_206.traineddata
+- med 10x lavere learning rate enn default (0.0002)
+- trent i 3 epoker, med samme data som 206
+
 nor_smx_train_rotate_remove.traineddata
 - trent på originaldataen med avis, men etter dataprossesseringssteg a og b
 - 100 epoker
-
-
 
 ## Modellnavn i gamle_modeller
 Modellene er navngitt etter eventuelle basemodeller og antall iterasjoner de er trent.
@@ -52,4 +63,4 @@ est: modellen er basert på den estiske basemodellen som finnes i [tessdata_best
 smx: den er finetuned på vårt transkriberte datasett
 20000: den er trent i 20 000 iterasjoner
 
-Modellene i `gamle_modeller/` er trent på originaldataen uten avis hvis de starter med smx_, og originaldataen uten avis + divvun&giellatekno sin data hvis de starter med smx2_
+Modellene i `gamle_modeller/` er trent på originaldataen uten avis hvis de starter med smx_, og originaldataen uten avis + divvun&giellatekno sin data hvis de starter med smx2_ (alle uten dataprossessering)
