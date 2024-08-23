@@ -1,8 +1,10 @@
 from functools import partial
+from math import ceil
 from pathlib import Path
 
 import mlflow
 import torch
+import transformers
 from transformers import (
     Seq2SeqTrainer,
     Seq2SeqTrainingArguments,
@@ -96,7 +98,9 @@ with mlflow.start_run() as run:
     samisk_ocr.mlflow.logging.log_file(run, Path(__file__), config.MLFLOW_ARTIFACT_RUN_INFO_DIR)
 
     # Setup trainer args
-    eval_frequency = 1
+    batch_size = 8
+    steps_per_epoch = ceil(len(processed_train_set) / batch_size)
+    eval_steps = 5 * steps_per_epoch
     batched_eval_frequency = 2000
     training_args = Seq2SeqTrainingArguments(
         #
@@ -106,9 +110,11 @@ with mlflow.start_run() as run:
         num_train_epochs=30,
         per_device_train_batch_size=8,
         remove_unused_columns=False,
+        lr_scheduler_type=transformers.SchedulerType.COSINE_WITH_RESTARTS,
         #
         # Evaluation parameters
-        eval_strategy="epoch",
+        eval_strategy="steps",
+        eval_steps=eval_steps,
         greater_is_better=False,
         logging_steps=50,
         per_device_eval_batch_size=8,
