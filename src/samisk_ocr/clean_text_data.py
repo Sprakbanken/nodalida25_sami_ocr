@@ -1,7 +1,8 @@
-from pathlib import Path
-from samisk_ocr.utils import setup_logging
 import logging
 from argparse import ArgumentParser
+from pathlib import Path
+
+from samisk_ocr.utils import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +25,7 @@ def clean_directory(directory: Path):
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(
-        description="Replace unwanted characters in textfiles in directory"
-    )
+    parser = ArgumentParser(description="Replace unwanted characters in textfiles in directory")
     parser.add_argument(
         "input_dir",
         type=Path,

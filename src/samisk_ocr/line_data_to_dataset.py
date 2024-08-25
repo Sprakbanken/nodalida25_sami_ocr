@@ -1,11 +1,12 @@
-from pathlib import Path
-from PIL import Image
-import pandas as pd
 import logging
-from samisk_ocr.utils import setup_logging, image_stem_to_urn_page_line_bbox
-from datasets import load_dataset
-
 from argparse import ArgumentParser
+from pathlib import Path
+
+import pandas as pd
+from datasets import load_dataset
+from PIL import Image
+
+from samisk_ocr.utils import image_stem_to_urn_page_line_bbox, setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +21,7 @@ def create_dataset_df(
     image_suffixes: list[str] = [".tif", ".png", ".jpg"],
     text_suffix=".gt.txt",
 ) -> pd.DataFrame:
-    image_paths = pd.Series(
-        [e for suf in image_suffixes for e in image_dir.glob(f"**/*{suf}")]
-    )
+    image_paths = pd.Series([e for suf in image_suffixes for e in image_dir.glob(f"**/*{suf}")])
     text_paths = image_paths.apply(lambda x: x.parent / (x.stem + text_suffix))
     if not all(text_paths.apply(lambda x: x.exists())):
         logger.error(
@@ -37,9 +36,7 @@ def create_dataset_df(
         e.unlink()
 
     image_stems = image_paths.apply(lambda x: x.stem)
-    urns, pages, lines, bboxes = zip(
-        *image_stems.apply(image_stem_to_urn_page_line_bbox)
-    )
+    urns, pages, lines, bboxes = zip(*image_stems.apply(image_stem_to_urn_page_line_bbox))
     df["urn"] = urns
     df["page"] = pages
     df["line"] = lines
@@ -51,13 +48,11 @@ def create_dataset_df(
 
 
 if __name__ == "__main__":
-    parser = ArgumentParser(
-        description="Create a 🤗️ datasets image dataset from line level data"
-    )
+    parser = ArgumentParser(description="Create a 🤗️ datasets image dataset from line level data")
     parser.add_argument(
         "image_dir",
         type=Path,
-        help="The directory containing to create dataset from",
+        help="The directory containing images and ground truth texts to create dataset from",
     )
     parser.add_argument(
         "--log_level",

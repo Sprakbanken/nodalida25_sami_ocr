@@ -1,31 +1,26 @@
-from argparse import ArgumentParser
-import pandas as pd
-from pathlib import Path
-from samisk_ocr.utils import setup_logging, clean_transcriptions
-from Levenshtein import distance
 import logging
+from argparse import ArgumentParser
+from pathlib import Path
 from shutil import copy2
+
+import pandas as pd
+from Levenshtein import distance
+
+from samisk_ocr.utils import clean_transcriptions, setup_logging
 
 logger = logging.getLogger(__name__)
 
 
 def first_char_different(df: pd.DataFrame) -> pd.DataFrame:
-    return df[
-        df.ground_truth.apply(lambda s: s[0]) != df.transcription.apply(lambda s: s[0])
-    ]
+    return df[df.ground_truth.apply(lambda s: s[0]) != df.transcription.apply(lambda s: s[0])]
 
 
 def last_char_different(df: pd.DataFrame) -> pd.DataFrame:
-    return df[
-        df.ground_truth.apply(lambda s: s[-1])
-        != df.transcription.apply(lambda s: s[-1])
-    ]
+    return df[df.ground_truth.apply(lambda s: s[-1]) != df.transcription.apply(lambda s: s[-1])]
 
 
 def relative_edit_distance_too_big(df: pd.DataFrame, threshold: float) -> pd.DataFrame:
-    distances = df.apply(
-        lambda row: distance(row.ground_truth, row.transcription), axis=1
-    )
+    distances = df.apply(lambda row: distance(row.ground_truth, row.transcription), axis=1)
     relative_distances = distances / df.ground_truth.apply(len)
     return df[relative_distances > threshold]
 
