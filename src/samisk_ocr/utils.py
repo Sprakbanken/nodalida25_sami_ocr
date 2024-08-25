@@ -1,10 +1,14 @@
 import logging
+from collections import namedtuple
 from datetime import datetime
+
 import pandas as pd
 
-from collections import namedtuple
-
 Bbox = namedtuple("Bbox", ["xmin", "ymin", "xmax", "ymax"])
+
+
+def page_image_stem_to_urn_page(image_stem: str) -> tuple[str, str]:
+    return tuple(image_stem.rsplit("_", maxsplit=1))
 
 
 def image_stem_to_urn_line_bbox(image_stem: str) -> tuple[str, int, Bbox]:
@@ -24,6 +28,10 @@ def image_stem_to_urn_page_line_bbox(image_stem: str) -> tuple[str, int, int, Bb
         return
     urn_, line = image_stem[:-20].rsplit("_", maxsplit=1)
     urn, page = urn_.rsplit("_", maxsplit=1)
+    if page.isnumeric():
+        page = int(page)
+    else:
+        page = -1
     return (urn, page, int(line), bbox)
 
 
