@@ -34,6 +34,12 @@ def write_urns_to_languages():
             for urn in urns:
                 urns_to_langcodes[urn] = langcodes
 
+    for e in Path("data/transkribus_exports/train_data/GT_pix").iterdir():
+        if not e.suffix == ".tif":
+            continue
+        urn = page_image_stem_to_urn_page(e.stem)[0]
+        urns_to_langcodes[urn] = ["nor"]
+
     for e in Path("data/transkribus_exports/train_data/side_30").iterdir():
         if not e.is_dir():
             continue
@@ -86,14 +92,13 @@ def create_val_split(metadata_df: pd.DataFrame) -> dict[str, list[str]]:
 def encance_metadata_df(metadata_df: pd.DataFrame) -> pd.DataFrame:
     """Add more metadata to columns to metadata csv"""
 
-    metadata_df["width"] = metadata_df.x2 - metadata_df.x1
-    metadata_df["height"] = metadata_df.y2 - metadata_df.y1
+    metadata_df["width"] = metadata_df.xmax - metadata_df.xmin
+    metadata_df["height"] = metadata_df.ymax - metadata_df.ymin
     image_stems = metadata_df["file_name"].apply(lambda x: Path(x).stem)
-    urns, pages, lines, bboxes = zip(*image_stems.apply(image_stem_to_urn_page_line_bbox))
+    urns, pages, lines, _ = zip(*image_stems.apply(image_stem_to_urn_page_line_bbox))
     metadata_df["urn"] = urns
     metadata_df["page"] = pages
     metadata_df["line"] = lines
-    metadata_df["bbox"] = bboxes
     metadata_df["text_len"] = metadata_df.text.apply(str).apply(len)
 
     with open("data/urns_to_langcodes.json") as f:
@@ -102,6 +107,8 @@ def encance_metadata_df(metadata_df: pd.DataFrame) -> pd.DataFrame:
 
     if "page_30" not in metadata_df.columns:
         metadata_df["page_30"] = [False] * len(metadata_df)
+    if "gt_pix" not in metadata_df.columns:
+        metadata_df["gt_pix"] = [False] * len(metadata_df)
 
     columns_in_order = [
         "file_name",
@@ -110,9 +117,13 @@ def encance_metadata_df(metadata_df: pd.DataFrame) -> pd.DataFrame:
         "langcodes",
         "page",
         "line",
-        "bbox",
+        "xmin",
+        "xmax",
+        "ymin",
+        "ymax",
         "text_len",
         "page_30",
+        "gt_pix",
     ]
 
     return metadata_df[columns_in_order]
@@ -192,22 +203,37 @@ if __name__ == "__main__":
 
     # Add automatically transcribed page_30 files to train directory
     page_30 = dataset_dir / "train" / "side_30"
-    page_30.mkdir()
-    transkribus_export_to_lines(
-        base_image_dir=Path("data/transkribus_exports/train_data/side_30"),
-        output_dir=page_30,
-    )
+    if not page_30.exists():
+        page_30.mkdir()
+        transkribus_export_to_lines(
+            base_image_dir=Path("data/transkribus_exports/train_data/side_30"),
+            output_dir=page_30,
+        )
     page_30_metadata_csv_path = page_30 / "metadata.csv"
     page_30_metadata_df = pd.read_csv(page_30_metadata_csv_path)
     page_30_metadata_df["page_30"] = [True] * len(page_30_metadata_df)
-    # Update path relative to dataset path
     page_30_metadata_df["file_name"] = page_30_metadata_df.file_name.apply(
-        lambda file_name: "train/side_30" + Path(file_name)
+        lambda file_name: "train/side_30/" + file_name
     )
     page_30_metadata_df = encance_metadata_df(page_30_metadata_df)
-
-    # Update metadata df with page 30 files metadata
     metadata_df = pd.concat((metadata_df, page_30_metadata_df))
+
+    # Add GTpix files to train directory
+    gt_pix = dataset_dir / "train" / "GT_pix"
+    if not gt_pix.exists():
+        gt_pix.mkdir()
+        transkribus_export_to_lines(
+            base_image_dir=Path("data/transkribus_exports/train_data/GT_pix"),
+            output_dir=gt_pix,
+        )
+    gt_pix_metadata_csv_path = gt_pix / "metadata.csv"
+    gt_pix_metadata_df = pd.read_csv(gt_pix_metadata_csv_path)
+    gt_pix_metadata_df["gt_pix"] = [True] * len(gt_pix_metadata_df)
+    gt_pix_metadata_df["file_name"] = gt_pix_metadata_df.file_name.apply(
+        lambda file_name: "train/GT_pix/" + file_name
+    )
+    gt_pix_metadata_df = encance_metadata_df(gt_pix_metadata_df)
+    metadata_df = pd.concat((metadata_df, gt_pix_metadata_df))
 
     # Create line level images from test data
     test_dir = dataset_dir / "test"
@@ -217,16 +243,15 @@ if __name__ == "__main__":
     )
     test_metadata_csv_path = test_dir / "metadata.csv"
     test_metadata_df = encance_metadata_df(pd.read_csv(test_metadata_csv_path))
-    # Update path relative to dataset path
     test_metadata_df["file_name"] = test_metadata_df.file_name.apply(lambda x: "test/" + x)
-
-    # Update metadata csv with test files metadata
     metadata_df = pd.concat((metadata_df, test_metadata_df))
+
     metadata_df.to_csv(dataset_dir / "metadata.csv", index=False)
 
     # Cleanup files
     test_metadata_csv_path.unlink()
     page_30_metadata_csv_path.unlink()
+    gt_pix_metadata_csv_path.unlink()
     rmtree(temp_train)
 
     dataset = load_dataset("imagefolder", data_dir=dataset_dir)
