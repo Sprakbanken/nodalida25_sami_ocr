@@ -1,7 +1,9 @@
+import logging
 from functools import partial
 from math import ceil
 from pathlib import Path
 
+import datasets
 import mlflow
 import torch
 import transformers
@@ -18,43 +20,43 @@ from samisk_ocr.mlflow.callbacks import (
     ImageSaverCallback,
 )
 from samisk_ocr.trocr.data_processing import transform_data
-from samisk_ocr.trocr.dataset import load_dataset, preprocess_dataset
+from samisk_ocr.trocr.dataset import preprocess_dataset
+from samisk_ocr.utils import setup_logging
+
+logger = logging.getLogger(__name__)
+setup_logging(source_script=Path(__file__).stem, log_level="INFO")
 
 config = samisk_ocr.trocr.config.Config()
 mlflow.set_tracking_uri(config.mlflow_url)
 mlflow.set_experiment("TrOCR trocr-base-printed finetuning")
-dataset_path = None
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load the datasets
-train_set = preprocess_dataset(
-    load_dataset(
-        config.DATA_PATH,
-        split_path=Path("data/urns.json"),
-        split="train",
-        only_curated=True,
-    ),
-    min_len=3,
-    min_with_height_ratio=2,
-    include_page_30=False,
-)
+logger.info("Loading validation data")
 validation_set = preprocess_dataset(
-    load_dataset(
-        config.DATA_PATH,
-        split_path=Path("data/urns.json"),
-        split="val",
-        only_curated=True,
-    ),
+    datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="validation"),
     min_len=3,
     min_with_height_ratio=2,
     include_page_30=False,
+    include_gt_pix=False,
 )
+logger.info("Loading training data")
+train_set = preprocess_dataset(
+    datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="train"),
+    min_len=3,
+    min_with_height_ratio=2,
+    include_page_30=False,
+    include_gt_pix=False,
+)
+logger.info("Data loaded")
 
 # Load the TrOCR processor and model
+logger.info("Loading TrOCR processor and model")
 processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-printed")
 model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-printed").to(device)
 
+logger.info("Setting model and processor params")
 # Figure out the maximum token length in the training set, which we use this to control the maximum
 # length of generated sequences. Specifically, we set the maximum length of generated sequences to
 # 1.5 times the maximum token length in the training set (rounded down), which can lead to significant
@@ -85,8 +87,9 @@ model.generation_config.no_repeat_ngram_size = 3
 model.generation_config.length_penalty = 2.0
 model.generation_config.num_beams = 4
 
-
 with mlflow.start_run() as run:
+    logger.info("Starting run %s", run.info.run_name)
+
     # Setup checkpoint dir
     experiment_name = Path(__file__).stem
     checkpoint_dir = Path(f"data/checkpoints/{experiment_name}/{run.info.run_name}/")
@@ -107,7 +110,7 @@ with mlflow.start_run() as run:
         # Training paramters
         fp16=False,
         learning_rate=1e-5,
-        num_train_epochs=30,
+        num_train_epochs=200,
         per_device_train_batch_size=8,
         remove_unused_columns=False,
         lr_scheduler_type=transformers.SchedulerType.COSINE_WITH_RESTARTS,
@@ -124,7 +127,8 @@ with mlflow.start_run() as run:
         load_best_model_at_end=True,
         metric_for_best_model="eval_cer",
         output_dir=checkpoint_dir,
-        save_strategy="epoch",  # Must be same as eval_strategy
+        save_strategy="steps",  # Must be same as eval_strategy
+        save_steps=eval_steps,
     )
 
     # Setup trainer
@@ -149,6 +153,9 @@ with mlflow.start_run() as run:
         ],
     )
 
+    logger.info("Saving processor")
     processor.save_pretrained(checkpoint_dir / "processor")
+    logger.info("Starting training")
     trainer.train()
+    logger.info("Training done, saving final model...")
     trainer.save_model(checkpoint_dir / "final_model")
