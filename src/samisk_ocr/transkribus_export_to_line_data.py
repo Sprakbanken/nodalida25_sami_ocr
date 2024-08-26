@@ -28,7 +28,7 @@ def transkribus_export_to_lines(
     https://github.com/Sprakbanken/hugin-munin-ordbilder/blob/main/scripts/create_unadjusted_dataset.py [Accessed: Aug 7, 2024].
 
     Modifications:
-    - Remove auhor information
+    - Remove author information
     - Add rows even if image exists
     - Don't copy pages
     - Rename words directory -> lines
@@ -63,10 +63,10 @@ def transkribus_export_to_lines(
                 row = {
                     "file_name": str(output_image_path.relative_to(output_dir)),
                     "text": clean(annotation["word"]),
-                    "x1": x1,
-                    "y1": y1,
-                    "x2": x2,
-                    "y2": y2,
+                    "xmin": x1,
+                    "ymin": y1,
+                    "xmax": x2,
+                    "ymax": y2,
                 }
                 rows.append(row)
                 continue
@@ -89,10 +89,10 @@ def transkribus_export_to_lines(
             row = {
                 "file_name": str(output_image_path.relative_to(output_dir)),
                 "text": clean(annotation["word"]),
-                "x1": x1,
-                "y1": y1,
-                "x2": x2,
-                "y2": y2,
+                "xmin": x1,
+                "ymin": y1,
+                "xmax": x2,
+                "ymax": y2,
             }
             rows.append(row)
 
