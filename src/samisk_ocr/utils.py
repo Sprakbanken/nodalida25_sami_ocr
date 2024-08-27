@@ -1,4 +1,5 @@
 import logging
+import sys
 from collections import namedtuple
 from datetime import datetime
 
@@ -7,8 +8,22 @@ import pandas as pd
 Bbox = namedtuple("Bbox", ["xmin", "ymin", "xmax", "ymax"])
 
 
-def page_image_stem_to_urn_page(image_stem: str) -> tuple[str, str]:
-    return tuple(image_stem.rsplit("_", maxsplit=1))
+def page_image_stem_to_urn_page(image_stem: str) -> tuple[str, int]:
+    """Split page image filename stem into urn and page number"""
+    # For books, the last part of the filename is the page number
+    pre, post = image_stem.rsplit("_", maxsplit=1)
+    if post.isnumeric():
+        return (pre, int(post))
+
+    # For newspapers, it is often the second to last part
+    pre_pre, pre_post = pre.rsplit("_", maxsplit=1)
+
+    # if the number is too large, its likely part of the urn and not a page number
+    if pre_post.isnumeric() and len(pre_post) < 5:
+        return (pre_pre, int(pre_post))
+
+    # Some images don't have numeric page numbers, but pandas likes columns of same type
+    return pre, -1
 
 
 def image_stem_to_urn_line_bbox(image_stem: str) -> tuple[str, int, Bbox]:
@@ -43,7 +58,7 @@ def setup_logging(source_script: str, log_level: str):
     logging.basicConfig(
         level=getattr(logging, log_level),
         format="%(asctime)s - %(levelname)s - %(message)s",
-        handlers=[logging.FileHandler(log_filename), logging.StreamHandler()],
+        handlers=[logging.FileHandler(log_filename), logging.StreamHandler(stream=sys.stdout)],
     )
 
 
