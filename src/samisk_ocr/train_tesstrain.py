@@ -62,6 +62,12 @@ def get_parser() -> ArgumentParser:
         default="exclude",
         help="Whether to include, exclude or transfer only the page_30 data",
     )
+    parser.add_argument(
+        "--gt_pix",
+        choices=["only", "include", "exclude"],
+        default="exclude",
+        help="Whether to include, exclude or transfer only the gt_pix data",
+    )
     parser.add_argument("--num_epochs", type=int, default=5)
     parser.add_argument("--learning_rate", type=float, default=0.002)
     parser.add_argument(
@@ -96,6 +102,10 @@ if __name__ == "__main__":
         train_dataset = train_dataset.filter(lambda x: not x["page_30"])
     elif args.page_30 == "only":
         train_dataset = train_dataset.filter(lambda x: x["page_30"])
+    if args.gt_pix == "exclude":
+        train_dataset = train_dataset.filter(lambda x: not x["gt_pix"])
+    elif args.page_30 == "only":
+        train_dataset = train_dataset.filter(lambda x: x["gt_pix"])
 
     model_traindata_dir = args.tesstrain_repo / "data" / f"{args.model_name}-ground-truth/"
 
