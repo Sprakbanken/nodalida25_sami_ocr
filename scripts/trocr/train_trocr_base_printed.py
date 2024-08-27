@@ -17,7 +17,9 @@ from transformers import (
 
 import samisk_ocr.trocr
 from samisk_ocr.mlflow.callbacks import (
-    ImageSaverCallback,
+    BatchEvalCallback,
+    RandomImageSaverCallback,
+    WorstImageSaverCallback,
 )
 from samisk_ocr.trocr.data_processing import transform_data
 from samisk_ocr.trocr.dataset import preprocess_dataset
@@ -47,7 +49,7 @@ train_set = preprocess_dataset(
     min_len=3,
     min_with_height_ratio=2,
     include_page_30=False,
-    include_gt_pix=False,
+    include_gt_pix=True,
 )
 logger.info("Data loaded")
 
@@ -104,7 +106,7 @@ with mlflow.start_run() as run:
     batch_size = 8
     steps_per_epoch = ceil(len(processed_train_set) / batch_size)
     eval_steps = 5 * steps_per_epoch
-    batched_eval_frequency = 2000
+    batched_eval_frequency = steps_per_epoch // 2
     training_args = Seq2SeqTrainingArguments(
         #
         # Training paramters
@@ -142,12 +144,26 @@ with mlflow.start_run() as run:
         eval_dataset=processed_validation_set,
         data_collator=default_data_collator,
         callbacks=[
-            ImageSaverCallback(
+            BatchEvalCallback(
+                compute_metrics=eval_func,
+                batch_sampler=processed_validation_set.batch(batch_size=batch_size),
+                eval_steps=steps_per_epoch,
+                prefix="batched_eval",
+            ),
+            RandomImageSaverCallback(
                 processor=processor,
                 validation_data=validation_set,
                 processed_validation_data=processed_validation_set,
                 device=device,
                 save_frequency=batched_eval_frequency,
+                artifact_image_dir=config.MLFLOW_ARTIFACT_IMAGE_DIR,
+            ),
+            WorstImageSaverCallback(
+                processor=processor,
+                validation_data=validation_set,
+                processed_validation_data=processed_validation_set,
+                device=device,
+                save_frequency=eval_steps,
                 artifact_image_dir=config.MLFLOW_ARTIFACT_IMAGE_DIR,
             ),
         ],
