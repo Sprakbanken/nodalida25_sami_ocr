@@ -117,6 +117,8 @@ def encance_metadata_df(metadata_df: pd.DataFrame) -> pd.DataFrame:
         "langcodes",
         "page",
         "line",
+        "width",
+        "height",
         "xmin",
         "xmax",
         "ymin",
