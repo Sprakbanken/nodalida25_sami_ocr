@@ -5,6 +5,7 @@ from pathlib import Path
 
 import datasets
 import mlflow
+import numpy as np
 import torch
 import transformers
 from transformers import (
@@ -17,11 +18,15 @@ from transformers import (
 
 import samisk_ocr.trocr
 from samisk_ocr.mlflow.callbacks import (
-    BatchEvalCallback,
+    BatchedMultipleEvaluatorsCallback,
+    MetricSummaryEvaluator,
+    MultipleEvaluatorsCallback,
     RandomImageSaverCallback,
-    WorstImageSaverCallback,
+    WorstTranscriptionImageEvaluator,
+    compute_cer,
+    compute_wer,
 )
-from samisk_ocr.trocr.data_processing import transform_data
+from samisk_ocr.trocr.data_processing import DatasetSampler, transform_data
 from samisk_ocr.trocr.dataset import preprocess_dataset
 from samisk_ocr.utils import setup_logging
 
@@ -72,8 +77,10 @@ max_target_length = int(1.5 * max_tokens)
 transform_data_partial = partial(
     transform_data, processor=processor, max_target_length=max_target_length
 )
-processed_train_set = train_set.with_transform(transform_data_partial)
-processed_validation_set = validation_set.with_transform(transform_data_partial)
+processed_train_set = train_set.with_transform(transform_data_partial, output_all_columns=True)
+processed_validation_set = validation_set.with_transform(
+    transform_data_partial, output_all_columns=True
+)
 
 # Ensure that the processor and model use the same special tokens
 model.config.decoder_start_token_id = processor.tokenizer.cls_token_id
@@ -88,6 +95,26 @@ model.generation_config.early_stopping = False
 model.generation_config.no_repeat_ngram_size = 3
 model.generation_config.length_penalty = 2.0
 model.generation_config.num_beams = 4
+
+# Set which metrics to log:
+evaluators = [
+    MetricSummaryEvaluator(compute_cer, np.mean, "mean_cer"),
+    MetricSummaryEvaluator(compute_wer, np.mean, "mean_wer"),
+    MetricSummaryEvaluator(compute_cer, np.median, "median_cer"),
+    MetricSummaryEvaluator(compute_wer, np.median, "median_wer"),
+    *[
+        MetricSummaryEvaluator(compute_cer, partial(np.percentile, q=q), f"{q}percentile_cer")
+        for q in [95, 90, 75, 25]
+    ],
+    *[
+        MetricSummaryEvaluator(compute_wer, partial(np.percentile, q=q), f"{q}percentile_wer")
+        for q in [95, 90, 75, 25]
+    ],
+    WorstTranscriptionImageEvaluator(
+        key="worst_cer_images", artifact_dir=Path("artifacts") / "images"
+    ),
+]
+
 
 with mlflow.start_run() as run:
     logger.info("Starting run %s", run.info.run_name)
@@ -144,12 +171,6 @@ with mlflow.start_run() as run:
         eval_dataset=processed_validation_set,
         data_collator=default_data_collator,
         callbacks=[
-            BatchEvalCallback(
-                compute_metrics=eval_func,
-                batch_sampler=processed_validation_set.batch(batch_size=batch_size),
-                eval_steps=steps_per_epoch,
-                prefix="batched_eval",
-            ),
             RandomImageSaverCallback(
                 processor=processor,
                 validation_data=validation_set,
@@ -158,13 +179,35 @@ with mlflow.start_run() as run:
                 save_frequency=batched_eval_frequency,
                 artifact_image_dir=config.MLFLOW_ARTIFACT_IMAGE_DIR,
             ),
-            WorstImageSaverCallback(
+            MultipleEvaluatorsCallback(
+                evaluators=evaluators,
                 processor=processor,
                 validation_data=validation_set,
                 processed_validation_data=processed_validation_set,
-                device=device,
-                save_frequency=eval_steps,
-                artifact_image_dir=config.MLFLOW_ARTIFACT_IMAGE_DIR,
+                frequency=eval_steps,
+                key_prefix="eval_",
+            ),
+            BatchedMultipleEvaluatorsCallback(
+                evaluators=evaluators,
+                processor=processor,
+                batch_sampler=DatasetSampler(
+                    dataset=validation_set,
+                    processed_dataset=processed_validation_set,
+                    batch_size=16,
+                ),
+                frequency=batched_eval_frequency,
+                key_prefix="batched_eval_",
+            ),
+            BatchedMultipleEvaluatorsCallback(
+                evaluators=evaluators,
+                processor=processor,
+                batch_sampler=DatasetSampler(
+                    dataset=train_set,
+                    processed_dataset=processed_train_set,
+                    batch_size=16,
+                ),
+                frequency=batched_eval_frequency,
+                key_prefix="batched_train_",
             ),
         ],
     )
