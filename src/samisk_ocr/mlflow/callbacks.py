@@ -3,7 +3,8 @@ from __future__ import annotations
 import itertools
 from dataclasses import dataclass
 from operator import attrgetter
-from typing import TYPE_CHECKING, Iterable, TypedDict
+from pathlib import Path
+from typing import TYPE_CHECKING, Iterable, Protocol, Sequence, TypedDict
 
 import evaluate
 import matplotlib.pyplot as plt
@@ -15,17 +16,24 @@ from tqdm import tqdm
 from transformers.trainer_callback import TrainerCallback
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterator
-    from pathlib import Path
-
     import accelerate
     import datasets
     import PIL.Image
-    from typing_extensions import Unpack  # Python 3.12 can use Unpack for TypedDicts
+    from typing_extensions import Unpack  # type: ignore # False positive
 
-    from samisk_ocr.trocr.types import TransformedData
+    from samisk_ocr.mlflow.types import Evaluator, Metric, ReductionFunction
+    from samisk_ocr.trocr.types import InputData, ProcessedData
 
-cer_metric = evaluate.load("cer", trust_remote_code=True)
+cer_metric = evaluate.load("cer")
+wer_metric = evaluate.load("wer")
+
+
+def compute_cer(prediction: str, reference: str) -> float:
+    return cer_metric.compute(predictions=[prediction], references=[reference])
+
+
+def compute_wer(prediction: str, reference: str) -> float:
+    return wer_metric.compute(predictions=[prediction], references=[reference])
 
 
 @dataclass
@@ -55,51 +63,7 @@ class CallbackKwargs(TypedDict):
     eval_dataloader: accelerate.data_loader.DataLoaderShard | None
 
 
-class BatchEvalCallback(TrainerCallback):
-    def __init__(
-        self,
-        compute_metrics: Callable[
-            [transformers.trainer_utils.EvalPrediction], dict[str, float]
-        ],
-        batch_sampler: Iterator[TransformedData],
-        eval_steps: int,
-        prefix: str = "batched_eval",
-    ) -> None:
-        self.compute_metrics = compute_metrics
-        self.batch_sampler = batch_sampler
-        self.eval_steps = eval_steps
-        self.prefix = prefix
-
-    def on_step_end(
-        self,
-        args: transformers.training_args_seq2seq.Seq2SeqTrainingArguments,
-        state: transformers.trainer_callback.TrainerState,
-        control: transformers.trainer_callback.TrainerControl,
-        model: transformers.modeling_utils.PreTrainedModel,
-        **kwargs: Unpack[CallbackKwargs],
-    ) -> None:
-        if self.eval_steps is None or state.global_step % self.eval_steps != 0:
-            return
-        # Sample randomly from the dataset
-        sample = next(self.batch_sampler)
-        # Unpack sampled dataset and move to device before running inference
-        pixel_values = sample["pixel_values"].to(model.device)
-        labels = sample["labels"]
-        prediction = model.generate(pixel_values).tolist()
-
-        # Compute metrics
-        prediction = transformers.trainer_utils.EvalPrediction(
-            predictions=prediction, label_ids=labels.copy(), inputs=pixel_values
-        )
-
-        metrics_mean = {
-            f"{self.prefix}_{k}": v for k, v in self.compute_metrics(prediction).items()
-        }
-
-        mlflow.log_metrics(metrics_mean, step=state.global_step)
-
-
-class BaseImageSaverCallback(TrainerCallback):
+class RandomImageSaverCallback(TrainerCallback):
     def __init__(
         self,
         processor: transformers.processing_utils.ProcessorMixin,
@@ -116,13 +80,42 @@ class BaseImageSaverCallback(TrainerCallback):
         self.save_frequency = save_frequency
         self.artifact_image_dir = artifact_image_dir
 
+        rng = np.random.default_rng(42)
+        self.indices = [int(i) for i in rng.choice(len(self.validation_data), 5, replace=False)]
+        self.samples = [self.validation_data[i] for i in self.indices]
+        self.processed_samples = [self.processed_validation_data[i] for i in self.indices]
+        self.pixel_values = torch.stack([b["pixel_values"] for b in self.processed_samples]).to(
+            device
+        )
+
+        self.images = [b["image"] for b in self.samples]
+        self.texts = [b["text"] for b in self.samples]
+
     def get_evaluated_examples(
         self, model: transformers.modeling_utils.PreTrainedModel
     ) -> list[EvaluatedExample]:
-        raise NotImplementedError
+        # Unpack sampled dataset and move to device before running inference
+        predictions = model.generate(
+            self.pixel_values
+        ).tolist()  # Få predictions til å kjøre på alle bilder
+        pred_texts = self.processor.batch_decode(predictions, skip_special_tokens=True)
+
+        return [
+            EvaluatedExample(
+                cer=cer_metric.compute(predictions=[pred_text], references=[true_text]),
+                image=px,
+                text=true_text,
+                estimated_text=pred_text,
+            )
+            for px, true_text, pred_text in zip(self.images, self.texts, pred_texts)
+        ]
 
     def get_filename(self, state: transformers.trainer_callback.TrainerState) -> str:
-        raise NotImplementedError
+        return (
+            self.artifact_image_dir
+            / "random_lines"
+            / f"predictions_step_{state.global_step:08d}.png"
+        )
 
     def on_step_end(
         self,
@@ -155,118 +148,158 @@ class BaseImageSaverCallback(TrainerCallback):
         return fig
 
 
-class RandomImageSaverCallback(BaseImageSaverCallback):
+class MultipleEvaluatorsCallback(TrainerCallback):
     def __init__(
         self,
+        evaluators: Sequence[Evaluator],
         processor: transformers.processing_utils.ProcessorMixin,
         validation_data: datasets.arrow_dataset.Dataset,
         processed_validation_data: datasets.arrow_dataset.Dataset,
-        device: torch.device,
-        artifact_image_dir: Path,
-        save_frequency: int = 10,
-    ):
-        super().__init__(
-            processor=processor,
-            validation_data=validation_data,
-            processed_validation_data=processed_validation_data,
-            device=device,
-            artifact_image_dir=artifact_image_dir,
-            save_frequency=save_frequency,
-        )
-
-        rng = np.random.default_rng(42)
-        self.indices = [int(i) for i in rng.choice(len(self.validation_data), 5, replace=False)]
-        self.samples = [self.validation_data[i] for i in self.indices]
-        self.processed_samples = [self.processed_validation_data[i] for i in self.indices]
-        self.pixel_values = torch.stack([b["pixel_values"] for b in self.processed_samples]).to(
-            device
-        )
-
-        self.images = [b["image"] for b in self.samples]
-        self.texts = [b["text"] for b in self.samples]
-
-    def get_evaluated_examples(
-        self, model: transformers.modeling_utils.PreTrainedModel
-    ) -> list[EvaluatedExample]:
-        # Unpack sampled dataset and move to device before running inference
-        predictions = model.generate(
-            self.pixel_values
-        ).tolist()  # Få predictions til å kjøre på alle bilder
-        pred_texts = self.processor.batch_decode(predictions, skip_special_tokens=True)
-
-        # TODO: Lag en liste med alle evaluated examples bilder som vi så sorterer og henter ut rett antall fra
-        return [
-            EvaluatedExample(
-                cer=cer_metric.compute(predictions=[pred_text], references=[true_text]),
-                image=px,
-                text=true_text,
-                estimated_text=pred_text,
-            )
-            for px, true_text, pred_text in zip(self.images, self.texts, pred_texts)
-        ]
-
-    def get_filename(self, state: transformers.trainer_callback.TrainerState) -> str:
-        return (
-            self.artifact_image_dir
-            / "random_lines"
-            / f"predictions_step_{state.global_step:08d}.png"
-        )
-
-
-class WorstImageSaverCallback(BaseImageSaverCallback):
-    def __init__(
-        self,
-        processor: transformers.processing_utils.ProcessorMixin,
-        validation_data: datasets.arrow_dataset.Dataset,
-        processed_validation_data: datasets.arrow_dataset.Dataset,
-        device: torch.device,
-        artifact_image_dir: Path,
-        save_frequency: int = 10,
+        frequency: int,
+        key_prefix: str,
         batch_size: int = 8,
+        artifact_path: Path = Path("artifacts/predictions"),
     ):
-        super().__init__(
-            processor=processor,
-            validation_data=validation_data,
-            processed_validation_data=processed_validation_data,
-            device=device,
-            artifact_image_dir=artifact_image_dir,
-            save_frequency=save_frequency,
-        )
+        self.evaluators = evaluators
+        self.processor = processor
+        self.processed_validation_data = processed_validation_data
+        self.validation_data = validation_data
+        self.frequency = frequency
+        self.key_prefix = key_prefix
         self.batch_size = batch_size
+        self.artifact_path = artifact_path
 
-    def get_evaluated_examples(
-        self, model: transformers.modeling_utils.PreTrainedModel
-    ) -> list[EvaluatedExample]:
-        # Get the images and texts from the validation dataset
-        images = self.validation_data["image"]
-        texts = self.validation_data["text"]
+    def on_step_end(
+        self,
+        args: transformers.training_args_seq2seq.Seq2SeqTrainingArguments,
+        state: transformers.trainer_callback.TrainerState,
+        control: transformers.trainer_callback.TrainerControl,
+        model: transformers.modeling_utils.PreTrainedModel,
+        **kwargs: Unpack[CallbackKwargs],
+    ) -> None:
+        if self.frequency is None or state.global_step % self.frequency != 0:
+            return
 
         pred_texts = []
         processed_val_iterable = tqdm(self.processed_validation_data, desc="Predicting for images")
         for b in itertools.batched(processed_val_iterable, self.batch_size):
-            pixel_values = torch.stack([bi["pixel_values"] for bi in b]).to(self.device)
+            pixel_values = torch.stack([bi["pixel_values"] for bi in b]).to(model.device)
 
             predictions = model.generate(pixel_values).tolist()
             batch_pred_texts = self.processor.batch_decode(predictions, skip_special_tokens=True)
             pred_texts.extend(batch_pred_texts)
 
-        return sorted(
+        # Store the predictions as an artifact before we run the evaluators in case one of them crash
+        mlflow.log_dict(
+            {"predictions": pred_texts, "true": self.validation_data["text"]},
+            self.artifact_path / f"{state.global_step:08d}.json",
+        )
+
+        for evaluator in self.evaluators:
+            evaluator(self.validation_data, pred_texts, state.global_step, self.key_prefix)
+
+
+class BatchedMultipleEvaluatorsCallback(TrainerCallback):
+    def __init__(
+        self,
+        evaluators: Sequence[Evaluator],
+        processor: transformers.processing_utils.ProcessorMixin,
+        batch_sampler: Iterable[tuple[InputData, ProcessedData]],
+        frequency: int,
+        key_prefix: str,
+    ):
+        self.evaluators = evaluators
+        self.processor = processor
+        self.batch_sampler = batch_sampler
+        self.frequency = frequency
+        self.key_prefix = key_prefix
+
+    def on_step_end(
+        self,
+        args: transformers.training_args_seq2seq.Seq2SeqTrainingArguments,
+        state: transformers.trainer_callback.TrainerState,
+        control: transformers.trainer_callback.TrainerControl,
+        model: transformers.modeling_utils.PreTrainedModel,
+        **kwargs: Unpack[CallbackKwargs],
+    ) -> None:
+        if self.frequency is None or state.global_step % self.frequency != 0:
+            return
+
+        # Sample randomly from the dataset
+        sample, processed_sample = next(self.batch_sampler)
+        # Unpack sampled dataset and move to device before running inference
+        pixel_values = processed_sample["pixel_values"].to(model.device)
+        predictions = model.generate(pixel_values).tolist()
+        pred_texts = self.processor.batch_decode(predictions, skip_special_tokens=True)
+
+        for evaluator in self.evaluators:
+            evaluator(sample, pred_texts, state.global_step, self.key_prefix)
+
+
+class MetricSummaryEvaluator:
+    def __init__(self, metric: Metric, reduction_function: ReductionFunction, key: str) -> None:
+        self.metric = metric
+        self.reduction_function = reduction_function
+        self.key = key
+
+    def __call__(
+        self,
+        data: datasets.arrow_dataset.Dataset,
+        pred_texts: list[str],
+        step: int,
+        key_prefix: str,
+    ) -> None:
+        metric_values = [
+            self.metric(prediction=pred, reference=true)
+            for pred, true in zip(pred_texts, data["text"])
+        ]
+        summary = self.reduction_function(metric_values)
+        mlflow.log_metric(f"{key_prefix}{self.key}", summary, step=step)
+
+
+class WorstTranscriptionImageEvaluator:
+    def __init__(
+        self, key: str = "worst_cer_images", artifact_dir: Path = Path("artifacts")
+    ) -> None:
+        self.key = key
+        self.artifact_dir = artifact_dir
+
+    def __call__(
+        self,
+        data: datasets.arrow_dataset.Dataset,
+        pred_texts: list[str],
+        step: int,
+        key_prefix: str,
+    ) -> None:
+        images = data["image"]
+        texts = data["text"]
+
+        examples = sorted(
             [
                 EvaluatedExample(
-                    cer=cer_metric.compute(predictions=[pred_text], references=[true_text]),
+                    cer=compute_cer(prediction=pred_text, reference=true_text),
                     image=px,
                     text=true_text,
                     estimated_text=pred_text,
                 )
-                for px, true_text, pred_text in zip(images, texts, pred_texts, strict=True)
+                for px, true_text, pred_text in zip(images, texts, pred_texts)
             ],
             key=attrgetter("cer"),
             reverse=True,
         )[:5]
 
-    def get_filename(self, state: transformers.trainer_callback.TrainerState) -> str:
-        return (
-            self.artifact_image_dir
-            / "worst_lines"
-            / f"predictions_step_{state.global_step:08d}.png"
-        )
+        fig, axs = plt.subplots(5, 1, figsize=(10, 10), tight_layout=True)
+        for ax, example in zip(axs, examples):
+            ax.imshow(example.image, cmap="gray")
+            ax.set_title(
+                f"     Text: {example.text}\n"
+                f"Estimated: {example.estimated_text}\n"
+                f"      CER: {example.cer}",
+                loc="left",
+                fontname="monospace",
+            )
+            ax.axis("off")
+
+        file_name = self.artifact_dir / f"{key_prefix}{self.key}" / f"{step:08d}.png"
+        mlflow.log_figure(fig, file_name)
+        plt.close(fig)
