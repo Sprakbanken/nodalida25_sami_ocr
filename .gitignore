@@ -1,6 +1,5 @@
 venv_samisk
 tesstrain
-tesseract
 output/
 example_image.out.txt
 data/
@@ -19,3 +18,4 @@ kladd.ipynb
 logs
 
 dataset.zip
+samisk_ocr_new_split
