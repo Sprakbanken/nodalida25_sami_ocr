@@ -157,8 +157,8 @@ class MultipleEvaluatorsCallback(TrainerCallback):
         processed_validation_data: datasets.arrow_dataset.Dataset,
         frequency: int,
         key_prefix: str,
+        artifact_path: Path,
         batch_size: int = 8,
-        artifact_path: Path = Path("artifacts/predictions"),
     ):
         self.evaluators = evaluators
         self.processor = processor
@@ -191,7 +191,12 @@ class MultipleEvaluatorsCallback(TrainerCallback):
 
         # Store the predictions as an artifact before we run the evaluators in case one of them crash
         mlflow.log_dict(
-            {"predictions": pred_texts, "true": self.validation_data["text"]},
+            {
+                "predictions": pred_texts,
+                "true": self.validation_data["text"],
+                "urn": self.validation_data["urn"],
+                "line": self.validation_data["line"],
+            },
             self.artifact_path / f"{state.global_step:08d}.json",
         )
 

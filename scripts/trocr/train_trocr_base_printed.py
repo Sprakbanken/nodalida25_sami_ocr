@@ -111,7 +111,7 @@ evaluators = [
         for q in [95, 90, 75, 25]
     ],
     WorstTranscriptionImageEvaluator(
-        key="worst_cer_images", artifact_dir=Path("artifacts") / "images"
+        key="worst_cer_images", artifact_dir=config.MLFLOW_ARTIFACT_IMAGE_DIR
     ),
 ]
 
@@ -128,6 +128,7 @@ with mlflow.start_run() as run:
     samisk_ocr.mlflow.logging.log_git_info(run, config.MLFLOW_ARTIFACT_RUN_INFO_DIR)
     samisk_ocr.mlflow.logging.log_installed_packages(run, config.MLFLOW_ARTIFACT_RUN_INFO_DIR)
     samisk_ocr.mlflow.logging.log_file(run, Path(__file__), config.MLFLOW_ARTIFACT_RUN_INFO_DIR)
+    samisk_ocr.mlflow.logging.log_config(run, config, config.MLFLOW_ARTIFACT_RUN_INFO_DIR)
 
     # Setup trainer args
     batch_size = 8
@@ -186,6 +187,7 @@ with mlflow.start_run() as run:
                 processed_validation_data=processed_validation_set,
                 frequency=eval_steps,
                 key_prefix="eval_",
+                artifact_path=config.MLFLOW_ARTIFACT_PREDICTIONS_DIR,
             ),
             BatchedMultipleEvaluatorsCallback(
                 evaluators=evaluators,

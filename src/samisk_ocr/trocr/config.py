@@ -4,13 +4,14 @@ from pydantic_settings import BaseSettings
 
 
 class Config(BaseSettings):
-    DATA_PATH: str = None
+    DATA_PATH: Path | None = None
     MLFLOW_HOST: str = "localhost"
     MLFLOW_PORT: int = 5431
     MLFLOW_PROTOCOL: str = "http"
 
     MLFLOW_ARTIFACT_RUN_INFO_DIR: Path = Path("run_info")
     MLFLOW_ARTIFACT_IMAGE_DIR: Path = Path("images")
+    MLFLOW_ARTIFACT_PREDICTIONS_DIR: Path = Path("predictions")
 
     @property
     def mlflow_url(self) -> str:
