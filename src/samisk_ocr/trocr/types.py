@@ -3,15 +3,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     import torch
     from PIL import Image
 
 
 class InputData(TypedDict):
-    image: list[Image.Image]
+    image: Sequence[Image.Image]
     transcription: str
 
 
-class TransformedData(TypedDict):
+class ProcessedData(TypedDict):
     pixel_values: torch.Tensor
-    labels: list[int]
+    labels: Sequence[int]

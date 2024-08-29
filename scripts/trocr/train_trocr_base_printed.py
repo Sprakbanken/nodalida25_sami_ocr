@@ -1,8 +1,11 @@
+import logging
 from functools import partial
 from math import ceil
 from pathlib import Path
 
+import datasets
 import mlflow
+import numpy as np
 import torch
 import transformers
 from transformers import (
@@ -15,46 +18,52 @@ from transformers import (
 
 import samisk_ocr.trocr
 from samisk_ocr.mlflow.callbacks import (
-    ImageSaverCallback,
+    BatchedMultipleEvaluatorsCallback,
+    MetricSummaryEvaluator,
+    MultipleEvaluatorsCallback,
+    RandomImageSaverCallback,
+    WorstTranscriptionImageEvaluator,
+    compute_cer,
+    compute_wer,
 )
-from samisk_ocr.trocr.data_processing import transform_data
-from samisk_ocr.trocr.dataset import load_dataset, preprocess_dataset
+from samisk_ocr.trocr.data_processing import DatasetSampler, transform_data
+from samisk_ocr.trocr.dataset import preprocess_dataset
+from samisk_ocr.utils import setup_logging
+
+logger = logging.getLogger(__name__)
+setup_logging(source_script=Path(__file__).stem, log_level="INFO")
 
 config = samisk_ocr.trocr.config.Config()
 mlflow.set_tracking_uri(config.mlflow_url)
-mlflow.set_experiment("TrOCR trocr-base-stage1 finetuning")
-dataset_path = None
+mlflow.set_experiment("TrOCR trocr-base-printed finetuning")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load the datasets
-train_set = preprocess_dataset(
-    load_dataset(
-        config.DATA_PATH,
-        split_path=Path("data/urns.json"),
-        split="train",
-        only_curated=True,
-    ),
-    min_len=3,
-    min_with_height_ratio=2,
-    include_page_30=False,
-)
+logger.info("Loading validation data")
 validation_set = preprocess_dataset(
-    load_dataset(
-        config.DATA_PATH,
-        split_path=Path("data/urns.json"),
-        split="val",
-        only_curated=True,
-    ),
+    datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="validation"),
     min_len=3,
     min_with_height_ratio=2,
     include_page_30=False,
+    include_gt_pix=False,
 )
+logger.info("Loading training data")
+train_set = preprocess_dataset(
+    datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="train"),
+    min_len=3,
+    min_with_height_ratio=2,
+    include_page_30=False,
+    include_gt_pix=True,
+)
+logger.info("Data loaded")
 
 # Load the TrOCR processor and model
-processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-stage1")
-model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-stage1").to(device)
+logger.info("Loading TrOCR processor and model")
+processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-printed")
+model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-printed").to(device)
 
+logger.info("Setting model and processor params")
 # Figure out the maximum token length in the training set, which we use this to control the maximum
 # length of generated sequences. Specifically, we set the maximum length of generated sequences to
 # 1.5 times the maximum token length in the training set (rounded down), which can lead to significant
@@ -68,8 +77,10 @@ max_target_length = int(1.5 * max_tokens)
 transform_data_partial = partial(
     transform_data, processor=processor, max_target_length=max_target_length
 )
-processed_train_set = train_set.with_transform(transform_data_partial)
-processed_validation_set = validation_set.with_transform(transform_data_partial)
+processed_train_set = train_set.with_transform(transform_data_partial, output_all_columns=True)
+processed_validation_set = validation_set.with_transform(
+    transform_data_partial, output_all_columns=True
+)
 
 # Ensure that the processor and model use the same special tokens
 model.config.decoder_start_token_id = processor.tokenizer.cls_token_id
@@ -85,8 +96,29 @@ model.generation_config.no_repeat_ngram_size = 3
 model.generation_config.length_penalty = 2.0
 model.generation_config.num_beams = 4
 
+# Set which metrics to log:
+evaluators = [
+    MetricSummaryEvaluator(compute_cer, np.mean, "mean_cer"),
+    MetricSummaryEvaluator(compute_wer, np.mean, "mean_wer"),
+    MetricSummaryEvaluator(compute_cer, np.median, "median_cer"),
+    MetricSummaryEvaluator(compute_wer, np.median, "median_wer"),
+    *[
+        MetricSummaryEvaluator(compute_cer, partial(np.percentile, q=q), f"{q}percentile_cer")
+        for q in [95, 90, 75, 25]
+    ],
+    *[
+        MetricSummaryEvaluator(compute_wer, partial(np.percentile, q=q), f"{q}percentile_wer")
+        for q in [95, 90, 75, 25]
+    ],
+    WorstTranscriptionImageEvaluator(
+        key="worst_cer_images", artifact_dir=config.MLFLOW_ARTIFACT_IMAGE_DIR
+    ),
+]
+
 
 with mlflow.start_run() as run:
+    logger.info("Starting run %s", run.info.run_name)
+
     # Setup checkpoint dir
     experiment_name = Path(__file__).stem
     checkpoint_dir = Path(f"data/checkpoints/{experiment_name}/{run.info.run_name}/")
@@ -96,18 +128,19 @@ with mlflow.start_run() as run:
     samisk_ocr.mlflow.logging.log_git_info(run, config.MLFLOW_ARTIFACT_RUN_INFO_DIR)
     samisk_ocr.mlflow.logging.log_installed_packages(run, config.MLFLOW_ARTIFACT_RUN_INFO_DIR)
     samisk_ocr.mlflow.logging.log_file(run, Path(__file__), config.MLFLOW_ARTIFACT_RUN_INFO_DIR)
+    samisk_ocr.mlflow.logging.log_config(run, config, config.MLFLOW_ARTIFACT_RUN_INFO_DIR)
 
     # Setup trainer args
     batch_size = 8
     steps_per_epoch = ceil(len(processed_train_set) / batch_size)
     eval_steps = 5 * steps_per_epoch
-    batched_eval_frequency = 2000
+    batched_eval_frequency = steps_per_epoch // 2
     training_args = Seq2SeqTrainingArguments(
         #
         # Training paramters
         fp16=False,
         learning_rate=1e-5,
-        num_train_epochs=30,
+        num_train_epochs=200,
         per_device_train_batch_size=8,
         remove_unused_columns=False,
         lr_scheduler_type=transformers.SchedulerType.COSINE_WITH_RESTARTS,
@@ -124,7 +157,8 @@ with mlflow.start_run() as run:
         load_best_model_at_end=True,
         metric_for_best_model="eval_cer",
         output_dir=checkpoint_dir,
-        save_strategy="epoch",  # Must be same as eval_strategy
+        save_strategy="steps",  # Must be same as eval_strategy
+        save_steps=eval_steps,
     )
 
     # Setup trainer
@@ -138,7 +172,7 @@ with mlflow.start_run() as run:
         eval_dataset=processed_validation_set,
         data_collator=default_data_collator,
         callbacks=[
-            ImageSaverCallback(
+            RandomImageSaverCallback(
                 processor=processor,
                 validation_data=validation_set,
                 processed_validation_data=processed_validation_set,
@@ -146,9 +180,43 @@ with mlflow.start_run() as run:
                 save_frequency=batched_eval_frequency,
                 artifact_image_dir=config.MLFLOW_ARTIFACT_IMAGE_DIR,
             ),
+            MultipleEvaluatorsCallback(
+                evaluators=evaluators,
+                processor=processor,
+                validation_data=validation_set,
+                processed_validation_data=processed_validation_set,
+                frequency=eval_steps,
+                key_prefix="eval_",
+                artifact_path=config.MLFLOW_ARTIFACT_PREDICTIONS_DIR,
+            ),
+            BatchedMultipleEvaluatorsCallback(
+                evaluators=evaluators,
+                processor=processor,
+                batch_sampler=DatasetSampler(
+                    dataset=validation_set,
+                    processed_dataset=processed_validation_set,
+                    batch_size=16,
+                ),
+                frequency=batched_eval_frequency,
+                key_prefix="batched_eval_",
+            ),
+            BatchedMultipleEvaluatorsCallback(
+                evaluators=evaluators,
+                processor=processor,
+                batch_sampler=DatasetSampler(
+                    dataset=train_set,
+                    processed_dataset=processed_train_set,
+                    batch_size=16,
+                ),
+                frequency=batched_eval_frequency,
+                key_prefix="batched_train_",
+            ),
         ],
     )
 
+    logger.info("Saving processor")
     processor.save_pretrained(checkpoint_dir / "processor")
+    logger.info("Starting training")
     trainer.train()
+    logger.info("Training done, saving final model...")
     trainer.save_model(checkpoint_dir / "final_model")

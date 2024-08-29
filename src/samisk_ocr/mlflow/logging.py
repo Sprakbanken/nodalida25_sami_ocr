@@ -8,6 +8,8 @@ import mlflow
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from samisk_ocr.trocr.config import Config
+
 
 def log_file(run: mlflow.entities.Run, file_path: str, mlflow_artifact_dir: Path) -> None:
     """Log a file to MLflow as an artifact."""
@@ -37,3 +39,12 @@ def log_git_info(run: mlflow.entities.Run, mlflow_artifact_dir: Path) -> None:
         ["git", "status"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
     mlflow.log_text(status.stdout, mlflow_artifact_dir / "git_status.txt", run_id=run.info.run_id)
+
+
+def log_config(run: mlflow.entities.Run, config: Config, mlflow_artifact_dir: Path) -> None:
+    """Log the configuration to MLflow as an artifact."""
+    mlflow.log_text(
+        config.model_dump_json(indent=2),
+        mlflow_artifact_dir / "config.json",
+        run_id=run.info.run_id,
+    )
