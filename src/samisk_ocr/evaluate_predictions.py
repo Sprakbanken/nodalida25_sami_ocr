@@ -17,20 +17,6 @@ from samisk_ocr.utils import setup_logging
 logger = logging.getLogger(__name__)
 
 
-def urn_to_langcode(urn: str) -> str:
-    df = pd.read_csv("data/testset_languages.tsv", sep="\t")
-
-    # expect full match on page level
-    if urn in df.side_filnavn:
-        return df[df.side_filnavn == urn].språkkode.item()
-
-    # line level images contain line number and bbox information in filename
-    for e in df.side_filnavn:
-        if e in urn:
-            return df[df.side_filnavn == e].språkkode.item()
-    return None
-
-
 def get_language_specific_chars(base_model_language: str) -> list[str]:
     match base_model_language:
         case "nor":
