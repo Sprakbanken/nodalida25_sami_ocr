@@ -2,7 +2,7 @@ import json
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
-from shutil import rmtree
+from shutil import copy2
 
 import pandas as pd
 from datasets import load_dataset
@@ -79,8 +79,19 @@ def create_val_split(metadata_df: pd.DataFrame) -> dict[str, list[str]]:
         sum_so_far = 0
         i = -1
         while sum_so_far < val_num_target:
-            sum_so_far += urn_lines[i][1]
-            urns.append(urn_lines[i][0])
+            diff_to_target = val_num_target - sum_so_far
+            next_urn, next_nr = urn_lines[i]
+            # dont add next urn if total number of val lines goes further from target than it already is
+            if (
+                sum_so_far + next_nr > val_num_target
+                and (sum_so_far + next_nr) - val_num_target > diff_to_target
+            ):
+                logger.debug(
+                    f"For {lang}, number of lines in val set would have been {sum_so_far+next_nr}, breaking"
+                )
+                break
+            sum_so_far += next_nr
+            urns.append(next_urn)
             i -= 1
         logger.info(f"Number of lines in validation set for {lang}")
         logger.info(f"Target number of lines {val_num_target}")
@@ -131,42 +142,41 @@ def encance_metadata_df(metadata_df: pd.DataFrame) -> pd.DataFrame:
     return metadata_df[columns_in_order]
 
 
+def copy_files(metadata_df: pd.DataFrame, from_dir: Path, to_dir: Path):
+    # Set from_path relative to from directory
+    from_paths = metadata_df.file_name.apply(lambda file_name: from_dir / file_name)
+    assert all(from_paths.apply(lambda x: x.exists()))
+    for file_name, from_path in zip(metadata_df.file_name, from_paths):
+        copy2(src=from_path, dst=to_dir / Path(file_name).name)
+
+
 def rearrange_train_and_val_files(
-    metadata_df: pd.DataFrame, val_urns: dict[str, list[str]], dataset_dir: Path
+    metadata_df: pd.DataFrame,
+    val_urns: dict[str, list[str]],
+    temp_train_dir: Path,
+    dataset_dir: Path,
 ) -> pd.DataFrame:
     """Create file train and val file structure, and return metadata with updated paths"""
-
-    # Set from_path relative to (outer) dataset directory
-    metadata_df["from_path"] = metadata_df.file_name.apply(
-        lambda file_name: dataset_dir / "temp_train" / file_name
-    )
-    assert all(metadata_df.from_path.apply(lambda x: x.exists()))
 
     val_urn_list = [urn for urn_list in val_urns.values() for urn in urn_list]
     val_df = metadata_df[metadata_df.urn.isin(val_urn_list)]
     train_df = metadata_df[~metadata_df.urn.isin(val_urn_list)]
 
     train_dir = dataset_dir / "train"
-    train_dir.mkdir(exist_ok=True)
+    train_dir.mkdir(parents=True)
 
-    for e in train_df.itertuples():
-        e.from_path.rename(train_dir / Path(e.file_name).name)
-
+    copy_files(train_df, from_dir=temp_train_dir, to_dir=train_dir)
     train_df["file_name"] = train_df.file_name.apply(
         lambda file_name: "train/" + Path(file_name).name
     )
 
     val_dir = dataset_dir / "val"
-    val_dir.mkdir(exist_ok=True)
-
-    for e in val_df.itertuples():
-        e.from_path.rename(val_dir / Path(e.file_name).name)
-
+    val_dir.mkdir()
+    copy_files(val_df, from_dir=temp_train_dir, to_dir=val_dir)
     val_df["file_name"] = val_df.file_name.apply(lambda file_name: "val/" + Path(file_name).name)
 
     metadata_df = pd.concat((train_df, val_df))
     metadata_df.index = range(len(metadata_df))
-    metadata_df = metadata_df.drop(columns=["from_path"])
     return metadata_df
 
 
@@ -187,9 +197,10 @@ if __name__ == "__main__":
     write_urns_to_languages()
 
     dataset_dir = args.dataset_dir
+    temp_line_level_dir = dataset_dir.parent / f"{dataset_dir.name}_temp_line_level"
 
     # Create line level images from manually transcribed testdata
-    temp_train = dataset_dir / "temp_train"
+    temp_train = temp_line_level_dir / "train"
     if not temp_train.exists():
         temp_train.mkdir(parents=True)
         transkribus_export_to_lines(
@@ -200,61 +211,75 @@ if __name__ == "__main__":
     # Create valiation split
     validation_urns = create_val_split(train_metadata_df)
     metadata_df = rearrange_train_and_val_files(
-        metadata_df=train_metadata_df, val_urns=validation_urns, dataset_dir=dataset_dir
+        metadata_df=train_metadata_df,
+        val_urns=validation_urns,
+        dataset_dir=dataset_dir,
+        temp_train_dir=temp_train,
     )
 
     # Add automatically transcribed page_30 files to train directory
-    page_30 = dataset_dir / "train" / "side_30"
-    if not page_30.exists():
-        page_30.mkdir()
+    temp_page_30 = temp_line_level_dir / "side_30"
+    if not temp_page_30.exists():
+        temp_page_30.mkdir()
         transkribus_export_to_lines(
             base_image_dir=Path("data/transkribus_exports/train_data/side_30"),
-            output_dir=page_30,
+            output_dir=temp_page_30,
         )
-    page_30_metadata_csv_path = page_30 / "metadata.csv"
-    page_30_metadata_df = pd.read_csv(page_30_metadata_csv_path)
+    page_30_metadata_df = pd.read_csv(temp_page_30 / "metadata.csv")
+    page_30 = dataset_dir / "train" / "page_30"
+    page_30.mkdir()
+
+    copy_files(page_30_metadata_df, from_dir=temp_page_30, to_dir=page_30)
+
     page_30_metadata_df["page_30"] = [True] * len(page_30_metadata_df)
+
     page_30_metadata_df["file_name"] = page_30_metadata_df.file_name.apply(
-        lambda file_name: "train/side_30/" + file_name
+        lambda file_name: "train/page_30/" + Path(file_name).name
     )
     page_30_metadata_df = encance_metadata_df(page_30_metadata_df)
     metadata_df = pd.concat((metadata_df, page_30_metadata_df))
 
     # Add GTpix files to train directory
-    gt_pix = dataset_dir / "train" / "GT_pix"
-    if not gt_pix.exists():
-        gt_pix.mkdir()
+    temp_gt_pix = temp_line_level_dir / "GT_pix"
+    if not temp_gt_pix.exists():
+        temp_gt_pix.mkdir()
         transkribus_export_to_lines(
             base_image_dir=Path("data/transkribus_exports/train_data/GT_pix"),
-            output_dir=gt_pix,
+            output_dir=temp_gt_pix,
         )
-    gt_pix_metadata_csv_path = gt_pix / "metadata.csv"
-    gt_pix_metadata_df = pd.read_csv(gt_pix_metadata_csv_path)
+
+    gt_pix_metadata_df = pd.read_csv(temp_gt_pix / "metadata.csv")
+    gt_pix = dataset_dir / "train" / "GT_pix"
+    gt_pix.mkdir()
+
+    copy_files(gt_pix_metadata_df, from_dir=temp_gt_pix, to_dir=gt_pix)
+
     gt_pix_metadata_df["gt_pix"] = [True] * len(gt_pix_metadata_df)
     gt_pix_metadata_df["file_name"] = gt_pix_metadata_df.file_name.apply(
-        lambda file_name: "train/GT_pix/" + file_name
+        lambda file_name: "train/GT_pix/" + Path(file_name).name
     )
+
     gt_pix_metadata_df = encance_metadata_df(gt_pix_metadata_df)
     metadata_df = pd.concat((metadata_df, gt_pix_metadata_df))
 
     # Create line level images from test data
+    temp_test_dir = temp_line_level_dir / "test"
+    if not temp_test_dir.exists():
+        transkribus_export_to_lines(
+            base_image_dir=Path("data/transkribus_exports/test_data"), output_dir=temp_test_dir
+        )
+
+    test_metadata_df = encance_metadata_df(pd.read_csv(temp_test_dir / "metadata.csv"))
     test_dir = dataset_dir / "test"
     test_dir.mkdir()
-    transkribus_export_to_lines(
-        base_image_dir=Path("data/transkribus_exports/test_data"), output_dir=test_dir
+
+    copy_files(test_metadata_df, from_dir=temp_test_dir, to_dir=test_dir)
+    test_metadata_df["file_name"] = test_metadata_df.file_name.apply(
+        lambda file_name: "test/" + Path(file_name).name
     )
-    test_metadata_csv_path = test_dir / "metadata.csv"
-    test_metadata_df = encance_metadata_df(pd.read_csv(test_metadata_csv_path))
-    test_metadata_df["file_name"] = test_metadata_df.file_name.apply(lambda x: "test/" + x)
+
     metadata_df = pd.concat((metadata_df, test_metadata_df))
-
     metadata_df.to_csv(dataset_dir / "metadata.csv", index=False)
-
-    # Cleanup files
-    test_metadata_csv_path.unlink()
-    page_30_metadata_csv_path.unlink()
-    gt_pix_metadata_csv_path.unlink()
-    rmtree(temp_train)
 
     dataset = load_dataset("imagefolder", data_dir=dataset_dir)
     logger.info(f"Successfully created 🤗️ image dataset at {dataset_dir}")
