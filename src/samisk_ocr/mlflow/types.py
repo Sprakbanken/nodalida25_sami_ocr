@@ -14,9 +14,5 @@ class Evaluator(Protocol):
     ) -> None: ...
 
 
-class Metric(Protocol):
-    def __call__(self, prediction: str, reference: str) -> float: ...
-
-
 class ReductionFunction(Protocol):
     def __call__(self, values: Sequence[float]) -> float: ...

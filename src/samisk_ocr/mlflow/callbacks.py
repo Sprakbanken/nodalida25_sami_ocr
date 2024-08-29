@@ -15,6 +15,8 @@ import transformers
 from tqdm import tqdm
 from transformers.trainer_callback import TrainerCallback
 
+from samisk_ocr.metrics import compute_cer
+
 if TYPE_CHECKING:
     import accelerate
     import datasets
@@ -23,17 +25,6 @@ if TYPE_CHECKING:
 
     from samisk_ocr.mlflow.types import Evaluator, Metric, ReductionFunction
     from samisk_ocr.trocr.types import InputData, ProcessedData
-
-cer_metric = evaluate.load("cer")
-wer_metric = evaluate.load("wer")
-
-
-def compute_cer(prediction: str, reference: str) -> float:
-    return cer_metric.compute(predictions=[prediction], references=[reference])
-
-
-def compute_wer(prediction: str, reference: str) -> float:
-    return wer_metric.compute(predictions=[prediction], references=[reference])
 
 
 @dataclass
@@ -255,7 +246,7 @@ class MetricSummaryEvaluator:
         key_prefix: str,
     ) -> None:
         metric_values = [
-            self.metric(prediction=pred, reference=true)
+            self.metric(ground_truth=true, transcription=pred)
             for pred, true in zip(pred_texts, data["text"])
         ]
         summary = self.reduction_function(metric_values)
@@ -282,7 +273,7 @@ class WorstTranscriptionImageEvaluator:
         examples = sorted(
             [
                 EvaluatedExample(
-                    cer=compute_cer(prediction=pred_text, reference=true_text),
+                    cer=compute_cer(ground_truth=true_text, transcription=pred_text),
                     image=px,
                     text=true_text,
                     estimated_text=pred_text,
