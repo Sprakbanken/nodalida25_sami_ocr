@@ -59,9 +59,10 @@ if __name__ == "__main__":
         help="Name of tesseract model (must be in list of available models with 'tesseract --list-langs')",
     )
     parser.add_argument(
-        "image_dir",
+        "--image_dir",
         type=Path,
         help="The directory containing images to be transcribed",
+        default=Path("data/samisk_ocr_line_level_dataset/val"),
     )
     parser.add_argument(
         "--output_dir",
