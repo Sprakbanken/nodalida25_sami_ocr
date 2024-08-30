@@ -25,8 +25,25 @@ def relative_edit_distance_too_big(df: pd.DataFrame, threshold: float) -> pd.Dat
     return df[relative_distances > threshold]
 
 
+def copy_lines(df_map: dict[str, pd.DataFrame], output_dir: Path) -> None:
+    """Copy line images and ground truth transcriptions from dataframes to output dir"""
+    data_p = Path("../data/")
+
+    for dirname, df in df_map.items():
+        subdir = output_dir / dirname
+        subdir.mkdir(parents=True)
+
+        for e in df.itertuples:
+            img_file = next(data_p.glob(f"*/{e.image}"))
+            copy2(src=img_file, dst=subdir / img_file.name)
+
+        df.to_csv(subdir / "line_data.csv", index=False)
+
+
 def get_parser() -> ArgumentParser:
-    parser = ArgumentParser(description="Transcribe with tesseract model")
+    parser = ArgumentParser(
+        description="Find (possibly) bad line-bboxes based on wrongful transcriptions"
+    )
     parser.add_argument(
         "csv",
         help=".csv file with predicted transcriptions and ground truth",
@@ -55,21 +72,6 @@ def get_parser() -> ArgumentParser:
         help="Set the logging level",
     )
     return parser
-
-
-def copy_lines(df_map: dict[str, pd.DataFrame], output_dir: Path) -> None:
-    """Copy line images and ground truth transcriptions from dataframes to output dir"""
-    data_p = Path("../data/")
-
-    for dirname, df in df_map.items():
-        subdir = output_dir / dirname
-        subdir.mkdir(parents=True)
-
-        for e in df.itertuples:
-            img_file = next(data_p.glob(f"*/{e.image}"))
-            copy2(src=img_file, dst=subdir / img_file.name)
-
-        df.to_csv(subdir / "line_data.csv", index=False)
 
 
 if __name__ == "__main__":
