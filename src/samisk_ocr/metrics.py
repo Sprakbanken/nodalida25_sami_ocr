@@ -55,6 +55,9 @@ class SpecialCharacterF1:
             true_character_count, transcription_character_count
         )
 
+        if true_positives == false_positives == false_negatives == 0:
+            return float("nan")
+
         return 2 * true_positives / (2 * true_positives + (false_positives + false_negatives))
 
     def count_true_positives(

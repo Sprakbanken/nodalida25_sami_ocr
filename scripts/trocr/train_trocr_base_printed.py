@@ -17,14 +17,13 @@ from transformers import (
 )
 
 import samisk_ocr.trocr
+from samisk_ocr.metrics import compute_cer, compute_wer
 from samisk_ocr.mlflow.callbacks import (
     BatchedMultipleEvaluatorsCallback,
     MetricSummaryEvaluator,
     MultipleEvaluatorsCallback,
     RandomImageSaverCallback,
     WorstTranscriptionImageEvaluator,
-    compute_cer,
-    compute_wer,
 )
 from samisk_ocr.trocr.data_processing import DatasetSampler, transform_data
 from samisk_ocr.trocr.dataset import preprocess_dataset
