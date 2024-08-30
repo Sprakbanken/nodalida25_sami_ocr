@@ -93,7 +93,10 @@ class RandomImageSaverCallback(TrainerCallback):
 
         return [
             EvaluatedExample(
-                cer=cer_metric.compute(predictions=[pred_text], references=[true_text]),
+                cer=compute_cer(
+                    true_text,
+                    pred_text,
+                ),
                 image=px,
                 text=true_text,
                 estimated_text=pred_text,
