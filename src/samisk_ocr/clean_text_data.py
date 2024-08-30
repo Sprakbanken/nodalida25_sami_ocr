@@ -8,6 +8,8 @@ logger = logging.getLogger(__name__)
 
 
 def clean(text: str) -> str:
+    # TODO: replace wrong D with line and potentially other unwanted characters
+
     # replace non-breaking space with normal space
     text = text.replace("\xa0", " ")
 
