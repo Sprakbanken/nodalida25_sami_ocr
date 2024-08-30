@@ -111,34 +111,39 @@ def rearrange_train_and_val_files(
     val_urns: dict[str, list[str]],
     temp_train_dir: Path,
     dataset_dir: Path,
-) -> pd.DataFrame:
-    """Create file train and val file structure, and return metadata with updated paths"""
-
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Create file train and val file structure, and return metadata dataframes with updated paths"""
     val_urn_list = [urn for urn_list in val_urns.values() for urn in urn_list]
-    val_df = metadata_df[metadata_df.urn.isin(val_urn_list)]
-    train_df = metadata_df[~metadata_df.urn.isin(val_urn_list)]
+    val_df = metadata_df[metadata_df.urn.isin(val_urn_list)].copy()
+    val_df.index = range(len(val_df))
+
+    val_dir = dataset_dir / "val"
+    val_dir.mkdir(parents=True)
+
+    copy_files(val_df, from_dir=temp_train_dir, to_dir=val_dir)
+    val_df["file_name"] = val_df.file_name.apply(lambda file_name: Path(file_name).name)
+
+    train_df = metadata_df[~metadata_df.urn.isin(val_urn_list)].copy()
+    train_df.index = range(len(train_df))
 
     train_dir = dataset_dir / "train"
     train_dir.mkdir(parents=True)
 
     copy_files(train_df, from_dir=temp_train_dir, to_dir=train_dir)
-    train_df["file_name"] = train_df.file_name.apply(
-        lambda file_name: "train/" + Path(file_name).name
-    )
+    train_df["file_name"] = train_df.file_name.apply(lambda file_name: Path(file_name).name)
 
-    val_dir = dataset_dir / "val"
-    val_dir.mkdir()
-    copy_files(val_df, from_dir=temp_train_dir, to_dir=val_dir)
-    val_df["file_name"] = val_df.file_name.apply(lambda file_name: "val/" + Path(file_name).name)
-
-    metadata_df = pd.concat((train_df, val_df))
-    metadata_df.index = range(len(metadata_df))
-    return metadata_df
+    return train_df, val_df
 
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="Create a 🤗️ datasets image dataset from the data")
     parser.add_argument("dataset_dir", type=Path, help="Output dir to store dataset")
+    parser.add_argument(
+        "--temp_dir",
+        type=Path,
+        help="Path to dir to store line segments",
+        default=Path("data/samisk_ocr_temp_line_level"),
+    )
     parser.add_argument(
         "--log_level",
         type=str,
@@ -153,7 +158,7 @@ if __name__ == "__main__":
     write_urns_to_languages()
 
     dataset_dir = args.dataset_dir
-    temp_line_level_dir = dataset_dir.parent / f"{dataset_dir.name}_temp_line_level"
+    temp_line_level_dir = args.temp_dir
 
     # Create line level images from manually transcribed testdata
     temp_train = temp_line_level_dir / "train"
@@ -166,12 +171,14 @@ if __name__ == "__main__":
 
     # Create valiation split
     validation_urns = create_val_split(train_metadata_df)
-    metadata_df = rearrange_train_and_val_files(
+    train_metadata_df, val_metadata_df = rearrange_train_and_val_files(
         metadata_df=train_metadata_df,
         val_urns=validation_urns,
         dataset_dir=dataset_dir,
         temp_train_dir=temp_train,
     )
+
+    val_metadata_df.to_csv(dataset_dir / "val" / "metadata.csv", index=False)
 
     # Add automatically transcribed page_30 files to train directory
     temp_page_30 = temp_line_level_dir / "side_30"
@@ -190,10 +197,10 @@ if __name__ == "__main__":
     page_30_metadata_df["page_30"] = [True] * len(page_30_metadata_df)
 
     page_30_metadata_df["file_name"] = page_30_metadata_df.file_name.apply(
-        lambda file_name: "train/page_30/" + Path(file_name).name
+        lambda file_name: "page_30/" + Path(file_name).name
     )
     page_30_metadata_df = encance_metadata_df(page_30_metadata_df)
-    metadata_df = pd.concat((metadata_df, page_30_metadata_df))
+    train_metadata_df = pd.concat((train_metadata_df, page_30_metadata_df))
 
     # Add GTpix files to train directory
     temp_gt_pix = temp_line_level_dir / "GT_pix"
@@ -212,11 +219,13 @@ if __name__ == "__main__":
 
     gt_pix_metadata_df["gt_pix"] = [True] * len(gt_pix_metadata_df)
     gt_pix_metadata_df["file_name"] = gt_pix_metadata_df.file_name.apply(
-        lambda file_name: "train/GT_pix/" + Path(file_name).name
+        lambda file_name: "GT_pix/" + Path(file_name).name
     )
 
     gt_pix_metadata_df = encance_metadata_df(gt_pix_metadata_df)
-    metadata_df = pd.concat((metadata_df, gt_pix_metadata_df))
+    train_metadata_df = pd.concat((train_metadata_df, gt_pix_metadata_df))
+
+    train_metadata_df.to_csv(dataset_dir / "train" / "metadata.csv", index=False)
 
     # Create line level images from test data
     temp_test_dir = temp_line_level_dir / "test"
@@ -231,11 +240,10 @@ if __name__ == "__main__":
 
     copy_files(test_metadata_df, from_dir=temp_test_dir, to_dir=test_dir)
     test_metadata_df["file_name"] = test_metadata_df.file_name.apply(
-        lambda file_name: "test/" + Path(file_name).name
+        lambda file_name: Path(file_name).name
     )
 
-    metadata_df = pd.concat((metadata_df, test_metadata_df))
-    metadata_df.to_csv(dataset_dir / "metadata.csv", index=False)
+    test_metadata_df.to_csv(dataset_dir / "test" / "metadata.csv", index=False)
 
     dataset = load_dataset("imagefolder", data_dir=dataset_dir)
     logger.info(f"Successfully created 🤗️ image dataset at {dataset_dir}")
