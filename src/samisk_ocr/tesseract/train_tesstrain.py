@@ -39,9 +39,7 @@ def get_parser() -> ArgumentParser:
     )
     parser.add_argument("model_name", help="Name of tesseract model")
     parser.add_argument("--tessdata", help="Path to tessdata (see tesseract_howto)")
-    parser.add_argument(
-        "--tesstrain_repo", type=Path, help="Path to tesstrain repo", default="tesstrain"
-    )
+    parser.add_argument("--tesstrain_repo", help="Path to tesstrain repo", default="tesstrain")
     parser.add_argument(
         "--dataset_path", help="Path to dataset", default="data/samisk_ocr_line_level_dataset"
     )
@@ -72,6 +70,11 @@ def get_parser() -> ArgumentParser:
     parser.add_argument("--learning_rate", type=float, default=0.002)
     parser.add_argument(
         "--start_model", type=str, help="Tesseract start model to continue training from"
+    )
+    parser.add_argument(
+        "--plot",
+        action="store_true",
+        help="If flagged, will plot checkpoints with tesstrain plot function after training",
     )
     parser.add_argument(
         "--log_level",
@@ -107,7 +110,7 @@ if __name__ == "__main__":
     elif args.page_30 == "only":
         train_dataset = train_dataset.filter(lambda x: x["gt_pix"])
 
-    model_traindata_dir = args.tesstrain_repo / "data" / f"{args.model_name}-ground-truth/"
+    model_traindata_dir = Path(args.tesstrain_repo) / "data" / f"{args.model_name}-ground-truth/"
 
     if model_traindata_dir.exists():
         if (
@@ -136,7 +139,7 @@ if __name__ == "__main__":
     logger.info("Creating .lstmf and .box files")
     subprocess.run(["make", "-C", "tesstrain", "lists", f"MODEL_NAME={args.model_name}"])
 
-    model_data_dir = args.tesstrain_repo / "data" / args.model_name
+    model_data_dir = Path(args.tesstrain_repo) / "data" / args.model_name
     model_data_dir.mkdir(exist_ok=True)
 
     logger.info("Creating custom list.train and list.eval files")
@@ -152,7 +155,7 @@ if __name__ == "__main__":
     tesstrain_arg_list = [
         "make",
         "-C",
-        "tesstrain",
+        args.tesstrain_repo,
         "training",
         f"MODEL_NAME={args.model_name}",
         f"EPOCHS={args.num_epochs}",
@@ -164,3 +167,5 @@ if __name__ == "__main__":
         tesstrain_arg_list.append(f"START_MODEL={args.start_model}")
 
     subprocess.run(tesstrain_arg_list)
+    if args.plot:
+        subprocess.run(["make", "-C", args.tesstrain_repo, "plot", f"MODEL_NAME={args.model_name}"])
