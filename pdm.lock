@@ -5,7 +5,7 @@
 groups = ["default"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:57d3cf9cbb64053e7fa58eba7894041ac1603c9bb26f9d1e724f842adfe36d00"
+content_hash = "sha256:6768b8e54155a0c32e72b712bc0633c3f57e3283b1b5ef3253fca4b9c91639fc"
 
 [[metadata.targets]]
 requires_python = ">=3.12"
@@ -475,7 +475,7 @@ version = "0.4.6"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 summary = "Cross-platform colored terminal text."
 groups = ["default"]
-marker = "platform_system == \"Windows\" and python_version >= \"3.12\" or sys_platform == \"win32\" and python_version >= \"3.12\""
+marker = "(platform_system == \"Windows\" or sys_platform == \"win32\") and python_version >= \"3.12\""
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
@@ -2659,7 +2659,7 @@ name = "ptyprocess"
 version = "0.7.0"
 summary = "Run a subprocess in a pseudo terminal"
 groups = ["default"]
-marker = "(sys_platform != \"win32\" and sys_platform != \"emscripten\") and python_version >= \"3.12\" or os_name != \"nt\" and python_version >= \"3.12\""
+marker = "(sys_platform != \"win32\" and sys_platform != \"emscripten\" or os_name != \"nt\") and python_version >= \"3.12\""
 files = [
     {file = "ptyprocess-0.7.0-py2.py3-none-any.whl", hash = "sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35"},
     {file = "ptyprocess-0.7.0.tar.gz", hash = "sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220"},
