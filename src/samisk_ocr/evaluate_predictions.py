@@ -11,11 +11,12 @@ from samisk_ocr.map_transkribus_lines_to_gt_lines import (
 )
 from samisk_ocr.metrics import SpecialCharacterF1, compute_cer, compute_wer
 from samisk_ocr.utils import setup_logging
+from samisk_ocr.write_characters import write_chars
 
 logger = logging.getLogger(__name__)
 
 
-def get_language_specific_chars(base_model_language: str, split: str) -> list[str]:
+def get_language_specific_chars(base_model_language: str, gt_chars: str) -> list[str]:
     match base_model_language:
         case "nor":
             base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÆØåæø"
@@ -33,12 +34,9 @@ def get_language_specific_chars(base_model_language: str, split: str) -> list[st
             )
             base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-    split_chars = Path(f"data/{split}set_characters.txt").read_text()
     not_letters = punctuation + whitespace + "«»–§"
     special_letters = [
-        c
-        for c in split_chars
-        if c not in base_language_alphabet + not_letters and not c.isnumeric()
+        c for c in gt_chars if c not in base_language_alphabet + not_letters and not c.isnumeric()
     ]
     return special_letters
 
@@ -104,9 +102,9 @@ if __name__ == "__main__":
         )
 
     gt_df = pd.read_csv(args.dataset / args.split / "metadata.csv")
-
-    image_gt_map = {Path(e.file_name).name: e.text for e in gt_df.itertuples()}
-    df["ground_truth"] = [image_gt_map[image] for image in df.image]
+    gt_df["image"] = gt_df.file_name.apply(lambda x: Path(x).name)
+    df = df.merge(gt_df, on="image")
+    df = df.rename(columns={"text": "ground_truth"})
 
     if args.line:
         output_dir = args.output_dir / "line_level" / args.model_name
@@ -134,7 +132,12 @@ if __name__ == "__main__":
     )
 
     if args.base_model_language:
-        special_chars = get_language_specific_chars(args.base_model_language, args.split)
+        write_chars(df, output_path=output_dir / "gt_chars.txt", text_column="ground_truth")
+        gt_chars = (output_dir / "gt_chars.txt").read_text()
+
+        special_chars = get_language_specific_chars(
+            base_model_language=args.base_model_language, gt_chars=gt_chars
+        )
         general_scorer = SpecialCharacterF1("".join(special_chars))
         df["special_char_F1"] = df.apply(
             lambda row: general_scorer(
