@@ -10,7 +10,6 @@ from datasets import load_dataset
 from samisk_ocr.transkribus_export_to_line_data import transkribus_export_to_lines
 from samisk_ocr.utils import (
     image_stem_to_urn_page_line_bbox,
-    page_image_stem_to_urn_page,
     setup_logging,
     write_urns_to_languages,
 )
