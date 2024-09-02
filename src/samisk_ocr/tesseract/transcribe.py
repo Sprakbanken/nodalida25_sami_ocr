@@ -62,7 +62,7 @@ if __name__ == "__main__":
         "--image_dir",
         type=Path,
         help="The directory containing images to be transcribed",
-        default=Path("data/samisk_ocr_line_level_dataset/val"),
+        default=Path("data/samisk_ocr_dataset/val"),
     )
     parser.add_argument(
         "--output_dir",
