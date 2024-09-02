@@ -1,23 +1,21 @@
 import json
 import logging
 from argparse import ArgumentParser
-from collections import Counter
-from functools import partial
 from pathlib import Path
 from string import punctuation, whitespace
 
 import pandas as pd
-from jiwer import cer, wer
 
 from samisk_ocr.map_transkribus_lines_to_gt_lines import (
     map_transkribus_image_lines_to_gt_image_lines,
 )
+from samisk_ocr.metrics import SpecialCharacterF1, compute_cer, compute_wer
 from samisk_ocr.utils import setup_logging
 
 logger = logging.getLogger(__name__)
 
 
-def get_language_specific_chars(base_model_language: str) -> list[str]:
+def get_language_specific_chars(base_model_language: str, split: str) -> list[str]:
     match base_model_language:
         case "nor":
             base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÆØåæø"
@@ -35,103 +33,14 @@ def get_language_specific_chars(base_model_language: str) -> list[str]:
             )
             base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-    test_chars = Path("data/testset_characters.txt").read_text()
+    split_chars = Path(f"data/{split}set_characters.txt").read_text()
     not_letters = punctuation + whitespace + "«»–§"
     special_letters = [
-        c for c in test_chars if c not in base_language_alphabet + not_letters and not c.isnumeric()
+        c
+        for c in split_chars
+        if c not in base_language_alphabet + not_letters and not c.isnumeric()
     ]
     return special_letters
-
-
-def evaluate_collection_level(df: pd.DataFrame, special_chars: list[str] = []) -> dict[str, float]:
-    """Calculate WER and CER across rows in df"""
-
-    scores = {}
-    scores["WER"] = wer(reference=df.ground_truth.to_list(), hypothesis=df.transcription.to_list())
-    scores["CER"] = cer(reference=df.ground_truth.to_list(), hypothesis=df.transcription.to_list())
-
-    if special_chars:
-        reference_counters = df.ground_truth.apply(Counter)
-        hypothesis_counters = df.transcription.apply(Counter)
-        for char in special_chars:
-            true_positives = 0
-            false_positives = 0
-            false_negatives = 0
-            scores[char] = {}
-            for ref_counter, hyp_counter in zip(reference_counters, hypothesis_counters):
-                ref_count = ref_counter[char]
-                hyp_count = hyp_counter[char]
-                if ref_count == hyp_count:
-                    true_positives += ref_count
-                    continue
-                if ref_count > hyp_count:
-                    # not all occurences of char have been correctly transcribed
-                    false_negatives += ref_count - hyp_count
-                    true_positives += hyp_count
-                if hyp_count > ref_count:
-                    # char has been transcribed when it wasn't there
-                    false_positives += hyp_count - ref_count
-                    true_positives += ref_count
-            if true_positives + false_positives == 0:
-                # The model never predicted the character
-                scores[char]["Precision"] = 0
-            else:
-                scores[char]["Precision"] = true_positives / (true_positives + false_positives)
-            scores[char]["Recall"] = true_positives / (true_positives + false_negatives)
-            scores[char]["F1"] = (2 * true_positives) / (
-                2 * true_positives + false_positives + false_negatives
-            )
-
-    return scores
-
-
-def evaluate_each_row(df: pd.DataFrame) -> pd.DataFrame:
-    """Calculate WER and CER for the each row in df"""
-    df["wer"] = df.apply(
-        lambda row: wer(reference=row.ground_truth, hypothesis=row.transcription),
-        axis=1,
-    )
-    df["cer"] = df.apply(
-        lambda row: cer(reference=row.ground_truth, hypothesis=row.transcription),
-        axis=1,
-    )
-    return df
-
-
-def evaluate_line_level(ground_truth: str, predicted_transcription: str) -> pd.DataFrame:
-    """Calculate WER and CER for each line in the texts (assumes text is page level/multiple lines)"""
-    ground_truth_lines = [line for line in ground_truth.split("\n") if line]
-    prediction_lines = [line for line in predicted_transcription.split("\n") if line]
-
-    if len(ground_truth_lines) < len(prediction_lines):
-        ground_truth_lines += [""] * (len(prediction_lines) - len(ground_truth_lines))
-    if len(prediction_lines) < len(ground_truth_lines):
-        prediction_lines += [""] * (len(ground_truth_lines) - len(prediction_lines))
-
-    wers = [
-        wer(reference=trans, hypothesis=pred)
-        for trans, pred in zip(ground_truth_lines, prediction_lines)
-    ]
-    cers = [
-        cer(reference=trans, hypothesis=pred)
-        for trans, pred in zip(ground_truth_lines, prediction_lines)
-    ]
-    return pd.DataFrame(
-        {
-            "ground_truth": ground_truth_lines,
-            "transcription": prediction_lines,
-            "wer": wers,
-            "cer": cers,
-        }
-    )
-
-
-def find_gt(img_path: Path, gt_dir: Path) -> Path:
-    exact_match = next(gt_dir.glob(f"{img_path.stem}*.txt"), None)
-    if exact_match:
-        return exact_match
-    logger.error(f"Couldn't find transcription for image {img_path} in {gt_dir}")
-    exit()
 
 
 def get_parser() -> ArgumentParser:
@@ -142,10 +51,9 @@ def get_parser() -> ArgumentParser:
         help=".csv file with predicted transcriptions",
     )
     parser.add_argument(
-        "gt_transcriptions",
-        type=Path,
-        help="The directory containing ground truth transcriptions (.txt-files)",
+        "--dataset", help="Path to dataset", default=Path("data/samisk_ocr_dataset")
     )
+    parser.add_argument("--split", help="Dataset split to evaluate", default="val")
     parser.add_argument(
         "--model_name",
         help="Name of model that produced transcriptions to evaluate",
@@ -195,10 +103,10 @@ if __name__ == "__main__":
             transkribus_df=df, gt_image_dir=args.gt_transcriptions
         )
 
-    df["langcode"] = df.image.apply(lambda x: Path(x).stem).apply(urn_to_langcode)
+    gt_df = pd.read_csv(args.dataset / args.split / "metadata.csv")
 
-    ground_truth_paths = df.image.apply(Path).apply(partial(find_gt, gt_dir=args.gt_transcriptions))
-    df["ground_truth"] = ground_truth_paths.apply(lambda p: p.read_text())
+    image_gt_map = {Path(e.file_name).name: e.text for e in gt_df.itertuples()}
+    df["ground_truth"] = [image_gt_map[image] for image in df.image]
 
     if args.line:
         output_dir = args.output_dir / "line_level" / args.model_name
@@ -206,26 +114,49 @@ if __name__ == "__main__":
         output_dir = args.output_dir / "page_level" / args.model_name
     output_dir.mkdir(parents=True)
 
-    special_chars = []
+    df["WER"] = df.apply(
+        lambda row: compute_cer(transcription=row.transcription, ground_truth=row.ground_truth),
+        axis=1,
+    )
+    df["CER"] = df.apply(
+        lambda row: compute_wer(transcription=row.transcription, ground_truth=row.ground_truth),
+        axis=1,
+    )
+
+    collection_level_scores = {}
+    collection_level_scores["WER"] = df.WER.mean()
+    collection_level_scores["CER"] = df.CER.mean()
+    collection_level_scores["WER_concat"] = compute_wer(
+        transcription=" ".join(df.transcription), ground_truth=" ".join(df.ground_truth)
+    )
+    collection_level_scores["CER_concat"] = compute_cer(
+        transcription=" ".join(df.transcription), ground_truth=" ".join(df.ground_truth)
+    )
+
     if args.base_model_language:
-        special_chars = get_language_specific_chars(args.base_model_language)
+        special_chars = get_language_specific_chars(args.base_model_language, args.split)
+        general_scorer = SpecialCharacterF1("".join(special_chars))
+        df["special_char_F1"] = df.apply(
+            lambda row: general_scorer(
+                transcription=row.transcription, ground_truth=row.ground_truth
+            ),
+            axis=1,
+        )
+        collection_level_scores["special_char_F1"] = df.special_char_F1.mean()
+        for char in special_chars:
+            char_scorer = SpecialCharacterF1(char)
+            collection_level_scores[char] = {
+                "F1": df.apply(
+                    lambda row: char_scorer(
+                        transcription=row.transcription, ground_truth=row.ground_truth
+                    ),
+                    axis=1,
+                ).mean()
+            }
 
-    # Calculate WER and CER for the entire collection
-    coll_scores = evaluate_collection_level(df, special_chars=special_chars)
-    with (output_dir / "all_rows.json").open("w+") as f:
-        f.write(json.dumps(coll_scores, ensure_ascii=False, indent=4))
-
-    # Calculate WER and CER for each oage
-    df = evaluate_each_row(df)
     df.to_csv(output_dir / "row_level.csv", index=False)
 
-    if not args.line:
-        # Calculate WER and CER for each line in each text
-        (output_dir / "line_level").mkdir()
-        for e in df.itertuples():
-            df = evaluate_line_level(
-                ground_truth=e.ground_truth, predicted_transcription=e.transcription
-            )
-            df.to_csv(output_dir / "line_level" / f"{e.image}.csv", index=False)
+    with (output_dir / "all_rows.json").open("w+") as f:
+        f.write(json.dumps(collection_level_scores, ensure_ascii=False, indent=4))
 
-    logger.info(f"See WER and CER scores in {output_dir}")
+    logger.info(f"See evaluation results in {output_dir}")
