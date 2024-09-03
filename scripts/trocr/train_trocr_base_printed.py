@@ -138,11 +138,10 @@ with mlflow.start_run() as run:
         #
         # Training paramters
         fp16=False,
-        learning_rate=1e-5,
+        learning_rate=3e-6,
         num_train_epochs=200,
         per_device_train_batch_size=8,
         remove_unused_columns=False,
-        lr_scheduler_type=transformers.SchedulerType.COSINE_WITH_RESTARTS,
         #
         # Evaluation parameters
         eval_strategy="steps",
