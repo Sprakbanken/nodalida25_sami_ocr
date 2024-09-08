@@ -189,6 +189,7 @@ class MultipleEvaluatorsCallback(TrainerCallback):
                 "predictions": pred_texts,
                 "true": self.validation_data["text"],
                 "urn": self.validation_data["urn"],
+                "page": self.validation_data["page"],
                 "line": self.validation_data["line"],
             },
             self.artifact_path / f"{state.global_step:08d}.json",
