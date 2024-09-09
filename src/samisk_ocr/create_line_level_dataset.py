@@ -1,5 +1,4 @@
 import argparse
-import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,9 +9,9 @@ from datasets import load_dataset
 
 from samisk_ocr.transkribus_export_to_line_data import transkribus_export_to_lines
 from samisk_ocr.utils import (
+    get_urn_to_langcode_map,
     image_stem_to_urn_page_line_bbox,
     setup_logging,
-    write_urns_to_languages,
 )
 
 logger = logging.getLogger(__name__)
@@ -57,7 +56,9 @@ def create_val_split(metadata_df: pd.DataFrame) -> dict[str, list[str]]:
     return val_urns
 
 
-def encance_metadata_df(metadata_df: pd.DataFrame) -> pd.DataFrame:
+def encance_metadata_df(
+    metadata_df: pd.DataFrame, urn_to_langcodes: dict[str, list[str]]
+) -> pd.DataFrame:
     """Add more metadata to columns to metadata csv"""
 
     metadata_df["width"] = metadata_df.xmax - metadata_df.xmin
@@ -69,8 +70,6 @@ def encance_metadata_df(metadata_df: pd.DataFrame) -> pd.DataFrame:
     metadata_df["line"] = lines
     metadata_df["text_len"] = metadata_df.text.apply(str).apply(len)
 
-    with open("data/urns_to_langcodes.json") as f:
-        urn_to_langcodes = json.load(f)
     metadata_df["langcodes"] = metadata_df.urn.apply(lambda x: urn_to_langcodes[x])
 
     if "page_30" not in metadata_df.columns:
@@ -145,8 +144,8 @@ class Args:
 
 
 def create_dataset(args: Args) -> None:
-    # Write mapping from urn to language code from dataset info files
-    write_urns_to_languages()
+    # Get mapping from urn to language code from dataset info files
+    urn_to_langcodes = get_urn_to_langcode_map()
 
     dataset_dir = args.dataset_dir
     temp_line_level_dir = args.temp_dir
@@ -158,7 +157,9 @@ def create_dataset(args: Args) -> None:
         transkribus_export_to_lines(
             base_image_dir=args.transkribus_export_dir / "train_data/train", output_dir=temp_train
         )
-    train_metadata_df = encance_metadata_df(pd.read_csv(temp_train / "metadata.csv"))
+    train_metadata_df = encance_metadata_df(
+        pd.read_csv(temp_train / "metadata.csv"), urn_to_langcodes=urn_to_langcodes
+    )
 
     # Create valiation split
     validation_urns = create_val_split(train_metadata_df)
@@ -190,7 +191,9 @@ def create_dataset(args: Args) -> None:
     page_30_metadata_df["file_name"] = page_30_metadata_df.file_name.apply(
         lambda file_name: "page_30/" + Path(file_name).name
     )
-    page_30_metadata_df = encance_metadata_df(page_30_metadata_df)
+    page_30_metadata_df = encance_metadata_df(
+        page_30_metadata_df, urn_to_langcodes=urn_to_langcodes
+    )
     train_metadata_df = pd.concat((train_metadata_df, page_30_metadata_df))
 
     # Add GTpix files to train directory
@@ -213,7 +216,7 @@ def create_dataset(args: Args) -> None:
         lambda file_name: "GT_pix/" + Path(file_name).name
     )
 
-    gt_pix_metadata_df = encance_metadata_df(gt_pix_metadata_df)
+    gt_pix_metadata_df = encance_metadata_df(gt_pix_metadata_df, urn_to_langcodes=urn_to_langcodes)
     train_metadata_df = pd.concat((train_metadata_df, gt_pix_metadata_df))
 
     train_metadata_df.to_csv(dataset_dir / "train" / "metadata.csv", index=False)
@@ -225,7 +228,9 @@ def create_dataset(args: Args) -> None:
             base_image_dir=args.transkribus_export_dir / "test_data", output_dir=temp_test_dir
         )
 
-    test_metadata_df = encance_metadata_df(pd.read_csv(temp_test_dir / "metadata.csv"))
+    test_metadata_df = encance_metadata_df(
+        pd.read_csv(temp_test_dir / "metadata.csv"), urn_to_langcodes=urn_to_langcodes
+    )
     test_dir = dataset_dir / "test"
     test_dir.mkdir()
 

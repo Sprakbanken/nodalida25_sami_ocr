@@ -70,12 +70,18 @@ def clean_transcriptions(transcriptions: pd.Series) -> pd.Series:
     return transcriptions.apply(str).apply(str.strip)
 
 
-def write_urns_to_languages():
-    """Write mapping from urn to language code for each urn in the train data"""
-    doc_id_to_lang_df = pd.read_csv("data/trainset_languages.tsv", sep="\t")
+def get_urn_to_langcode_map(
+    trainset_languages: Path = Path("data/trainset_languages.tsv"),
+    testset_languages: Path = Path("data/testset_languages.tsv"),
+    train_data_path: Path = Path("data/transkribus_exports/train_data/train"),
+    gt_pix_path: Path = Path("data/transkribus_exports/train_data/GT_pix"),
+    page_30_path: Path = Path("data/transkribus_exports/train_data/side_30"),
+) -> dict[str, list[str]]:
+    """Get mapping from urn to language code for each urn in the data"""
+    doc_id_to_lang_df = pd.read_csv(trainset_languages, sep="\t")
     urns_to_langcodes = {}
 
-    for e in Path("data/transkribus_exports/train_data/train").iterdir():
+    for e in train_data_path.iterdir():
         for sub_dir in e.iterdir():
             df_ = doc_id_to_lang_df[doc_id_to_lang_df.dokument == sub_dir.name]
             langcodes = df_.språkkode.to_list()
@@ -83,21 +89,20 @@ def write_urns_to_languages():
             for urn in urns:
                 urns_to_langcodes[urn] = langcodes
 
-    for e in Path("data/transkribus_exports/train_data/GT_pix").glob("*.tif"):
+    for e in gt_pix_path.glob("*.tif"):
         urn = page_image_stem_to_urn_page(e.stem)[0]
         urns_to_langcodes[urn] = ["nor"]
 
-    for e in Path("data/transkribus_exports/train_data/side_30").glob("*/"):
+    for e in page_30_path.glob("*/"):
         for sub_dir in e.iterdir():
             _, langcode = sub_dir.name.split("_")
             urns = [page_image_stem_to_urn_page(path.stem)[0] for path in sub_dir.glob("*.jpg")]
             for urn in urns:
                 urns_to_langcodes[urn] = [langcode]
 
-    testdata_page_urn_to_lang_df = pd.read_csv("data/testset_languages.tsv", sep="\t")
+    testdata_page_urn_to_lang_df = pd.read_csv(testset_languages, sep="\t")
     urns = testdata_page_urn_to_lang_df.side_filnavn.apply(lambda x: x[:-5])
     for urn, langcode in zip(urns, testdata_page_urn_to_lang_df.språkkode):
         urns_to_langcodes[urn] = [langcode]
 
-    with open("data/urns_to_langcodes.json", "w+") as f:
-        json.dump(urns_to_langcodes, f, ensure_ascii=False, indent=4)
+    return urns_to_langcodes
