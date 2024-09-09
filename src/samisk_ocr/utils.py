@@ -79,30 +79,18 @@ def write_urns_to_languages():
         for sub_dir in e.iterdir():
             df_ = doc_id_to_lang_df[doc_id_to_lang_df.dokument == sub_dir.name]
             langcodes = df_.språkkode.to_list()
-            urns = [
-                page_image_stem_to_urn_page(path.stem)[0]
-                for path in sub_dir.iterdir()
-                if not (path.is_dir() or path.suffix in (".xml", ".json"))
-            ]
+            urns = [page_image_stem_to_urn_page(path.stem)[0] for path in sub_dir.glob("*.jpg")]
             for urn in urns:
                 urns_to_langcodes[urn] = langcodes
 
-    for e in Path("data/transkribus_exports/train_data/GT_pix").iterdir():
-        if not e.suffix == ".tif":
-            continue
+    for e in Path("data/transkribus_exports/train_data/GT_pix").glob("*.tif"):
         urn = page_image_stem_to_urn_page(e.stem)[0]
         urns_to_langcodes[urn] = ["nor"]
 
-    for e in Path("data/transkribus_exports/train_data/side_30").iterdir():
-        if not e.is_dir():
-            continue
+    for e in Path("data/transkribus_exports/train_data/side_30").glob("*/"):
         for sub_dir in e.iterdir():
             _, langcode = sub_dir.name.split("_")
-            urns = [
-                page_image_stem_to_urn_page(path.stem)[0]
-                for path in sub_dir.iterdir()
-                if not (path.is_dir() or path.suffix in (".xml", ".json"))
-            ]
+            urns = [page_image_stem_to_urn_page(path.stem)[0] for path in sub_dir.glob("*.jpg")]
             for urn in urns:
                 urns_to_langcodes[urn] = [langcode]
 
