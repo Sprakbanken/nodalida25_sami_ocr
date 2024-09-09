@@ -25,16 +25,18 @@ def relative_edit_distance_too_big(df: pd.DataFrame, threshold: float) -> pd.Dat
     return df[relative_distances > threshold]
 
 
-def copy_lines(df_map: dict[str, pd.DataFrame], output_dir: Path) -> None:
+def copy_lines(df_map: dict[str, pd.DataFrame], output_dir: Path, data_dir: Path) -> None:
     """Copy line images and ground truth transcriptions from dataframes to output dir"""
-    data_p = Path("../data/")
 
     for dirname, df in df_map.items():
         subdir = output_dir / dirname
         subdir.mkdir(parents=True)
 
         for e in df.itertuples:
-            img_file = next(data_p.glob(f"*/{e.image}"))
+            img_file = next(data_dir.glob(f"*/{e.image}"))
+            if not img_file.exists():
+                logger.error(f"File {img_file} from dataframe does not exist in {data_dir}")
+                return None
             copy2(src=img_file, dst=subdir / img_file.name)
 
         df.to_csv(subdir / "line_data.csv", index=False)
@@ -63,6 +65,9 @@ def get_parser() -> ArgumentParser:
         "--output_dir",
         type=Path,
         help="Directory to store copied lines",
+    )
+    parser.add_argument(
+        "--data_dir", type=Path, help="Directory where data is stored", default=Path("../data/")
     )
     parser.add_argument(
         "--log_level",
@@ -114,4 +119,4 @@ if __name__ == "__main__":
             "edit_distance_big": edit_distance_big_df,
         }
 
-        copy_lines(df_map=df_map, output_dir=args.output_dir)
+        copy_lines(df_map=df_map, output_dir=args.output_dir, data_dir=args.data_dir)
