@@ -11,7 +11,7 @@ from samisk_ocr.map_transkribus_lines_to_gt_lines import (
 )
 from samisk_ocr.metrics import SpecialCharacterF1, compute_cer, compute_wer
 from samisk_ocr.utils import setup_logging
-from samisk_ocr.write_characters import write_chars
+from samisk_ocr.write_characters import get_chars
 
 logger = logging.getLogger(__name__)
 
@@ -132,8 +132,7 @@ if __name__ == "__main__":
     )
 
     if args.base_model_language:
-        write_chars(df, output_path=output_dir / "gt_chars.txt", text_column="ground_truth")
-        gt_chars = (output_dir / "gt_chars.txt").read_text()
+        gt_chars = get_chars(df, text_column="ground_truth")
 
         special_chars = get_language_specific_chars(
             base_model_language=args.base_model_language, gt_chars=gt_chars

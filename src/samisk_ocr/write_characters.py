@@ -13,10 +13,9 @@ def get_text(df: pd.DataFrame, text_column: str = "text") -> str:
     return all_text
 
 
-def write_chars(df: pd.DataFrame, output_path: Path, text_column: str = "text"):
+def get_chars(df: pd.DataFrame, text_column: str = "text") -> str:
     text = get_text(df, text_column=text_column)
-    with output_path.open("w+") as f:
-        f.write("".join(sorted(list(set(text)))))
+    return "".join(sorted(list(set(text))))
 
 
 def write_characters_all_splits(dataset_dir: Path, output_dir: Path):
@@ -26,7 +25,9 @@ def write_characters_all_splits(dataset_dir: Path, output_dir: Path):
             metadata_csv = e / "metadata.csv"
             if metadata_csv.exists():
                 df = pd.read_csv(metadata_csv)
-                write_chars(df, Path(output_dir / f"{split_name}set_characters.txt"))
+                chars = get_chars(df)
+                with Path(output_dir / f"{split_name}set_characters.txt").open("w+") as f:
+                    f.write(chars)
 
 
 if __name__ == "__main__":
