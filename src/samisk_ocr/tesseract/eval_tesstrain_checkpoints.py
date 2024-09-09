@@ -59,7 +59,7 @@ def call_transcribe_with_params(params):
 
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(description="Evaluate tesseract model checkpoints")
-    parser.add_argument("model_name", help="Name of tesseract model")
+    parser.add_argument("model_names", help="Names of tesseract models", nargs="+")
     parser.add_argument(
         "--tessdata", help="Path to tessdata (see tesseract_howto)", type=Path, required=True
     )
@@ -79,29 +79,29 @@ def get_parser() -> ArgumentParser:
 if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
-
     setup_logging("eval_tesstrain_checkpoints", log_level="DEBUG")
-
-    checkpoint_models_dir = args.tesstrain_repo / "data" / args.model_name / "tessdata_best/"
-    assert checkpoint_models_dir.exists()
-
-    copy_models_to_tessdata(checkpoint_models_dir, args.tessdata)
 
     all_params = []
 
-    for split in args.splits:
-        gt_df = pd.read_csv(args.dataset_path / split / "metadata.csv")
-        gt_df["image"] = gt_df.file_name.apply(lambda x: Path(x).name)
-        gt_df = gt_df.rename(columns={"text": "ground_truth"})
+    for model_name in args.model_names:
+        checkpoint_models_dir = args.tesstrain_repo / "data" / model_name / "tessdata_best/"
+        assert checkpoint_models_dir.exists()
 
-        image_dir = args.dataset_path / split
-        output_dir = args.output_dir / split
-        output_dir.mkdir(exist_ok=True, parents=True)
+        copy_models_to_tessdata(checkpoint_models_dir, args.tessdata)
 
-        for model in checkpoint_models_dir.iterdir():
-            model_name = model.name[: -len(".traineddata")]
-            output_file = output_dir / f"{model_name}.json"
-            all_params.append((model_name, image_dir, gt_df, output_file))
+        for split in args.splits:
+            gt_df = pd.read_csv(args.dataset_path / split / "metadata.csv")
+            gt_df["image"] = gt_df.file_name.apply(lambda x: Path(x).name)
+            gt_df = gt_df.rename(columns={"text": "ground_truth"})
 
-with concurrent.futures.ProcessPoolExecutor() as executor:
-    executor.map(call_transcribe_with_params, all_params)
+            image_dir = args.dataset_path / split
+            output_dir = args.output_dir / split
+            output_dir.mkdir(exist_ok=True, parents=True)
+
+            for checkpoint_model in checkpoint_models_dir.iterdir():
+                checkpoint_model_name = checkpoint_model.name[: -len(".traineddata")]
+                output_file = output_dir / f"{checkpoint_model_name}.json"
+                all_params.append((checkpoint_model_name, image_dir, gt_df, output_file))
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        executor.map(call_transcribe_with_params, all_params)
