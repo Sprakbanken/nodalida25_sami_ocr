@@ -1,13 +1,18 @@
 import json
 import logging
 import sys
-from collections import namedtuple
 from datetime import datetime
 from pathlib import Path
+from typing import NamedTuple
 
 import pandas as pd
 
-Bbox = namedtuple("Bbox", ["xmin", "ymin", "xmax", "ymax"])
+
+class Bbox(NamedTuple):
+    xmin: int
+    ymin: int
+    xmax: int
+    ymax: int
 
 
 def page_image_stem_to_urn_page(image_stem: str) -> tuple[str, int]:
