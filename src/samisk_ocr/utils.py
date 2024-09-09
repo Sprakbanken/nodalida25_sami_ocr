@@ -24,8 +24,8 @@ def page_image_stem_to_urn_page(image_stem: str) -> tuple[str, int]:
     if pre_post.isnumeric() and len(pre_post) < 5:
         return (pre_pre, int(pre_post))
 
-    # Some images don't have numeric page numbers, but pandas likes columns of same type
-    return pre, -1
+    # Some images don't have numeric page numbers
+    return pre, pd.NA
 
 
 def image_stem_to_urn_line_bbox(image_stem: str) -> tuple[str, int, Bbox]:

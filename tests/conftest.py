@@ -6,8 +6,7 @@ import pytest
 
 @pytest.fixture
 def setup_and_teardown_test_dirs():
-    print("\nSetup: Setup testdata")
-    ids = ["2893103", "2751369"]
+    ids = ["2893103", "2706089"]
 
     transkribus_exports_in = (
         Path(__file__).parent.parent / "data/transkribus_exports/train_data/train"
@@ -33,7 +32,6 @@ def setup_and_teardown_test_dirs():
     shutil.copytree(src=export_data, dst=export_out)
 
     yield
-    print("\nTeardown: Removing testdata")
     shutil.rmtree(testdata_dir)
 
 
