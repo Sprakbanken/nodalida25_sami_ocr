@@ -73,7 +73,7 @@ def write_urns_to_languages():
     for e in Path("data/transkribus_exports/train_data/train").iterdir():
         for sub_dir in e.iterdir():
             df_ = doc_id_to_lang_df[doc_id_to_lang_df.dokument == sub_dir.name]
-            langcodes = [e.språkkode for e in df_.itertuples()]
+            langcodes = df_.språkkode.to_list()
             urns = [
                 page_image_stem_to_urn_page(path.stem)[0]
                 for path in sub_dir.iterdir()
