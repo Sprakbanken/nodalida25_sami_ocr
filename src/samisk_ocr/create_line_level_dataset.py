@@ -1,6 +1,7 @@
+import argparse
 import json
 import logging
-from argparse import ArgumentParser
+from dataclasses import dataclass
 from pathlib import Path
 from shutil import copy2
 
@@ -38,7 +39,8 @@ def create_val_split(metadata_df: pd.DataFrame) -> dict[str, list[str]]:
             next_urn, next_nr = urn_lines[i]
             # dont add next urn if total number of val lines goes further from target than it already is
             if (
-                sum_so_far + next_nr > val_num_target
+                sum_so_far
+                and sum_so_far + next_nr > val_num_target
                 and (sum_so_far + next_nr) - val_num_target > diff_to_target
             ):
                 logger.debug(
@@ -134,25 +136,15 @@ def rearrange_train_and_val_files(
     return train_df, val_df
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser(description="Create a 🤗️ datasets image dataset from the data")
-    parser.add_argument("dataset_dir", type=Path, help="Output dir to store dataset")
-    parser.add_argument(
-        "--temp_dir",
-        type=Path,
-        help="Path to dir to store line segments",
-        default=Path("data/samisk_ocr_temp_line_level"),
-    )
-    parser.add_argument(
-        "--log_level",
-        type=str,
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        default="INFO",
-        help="Set the logging level",
-    )
-    args = parser.parse_args()
-    setup_logging(source_script="create_line_level_dataset", log_level=args.log_level)
+@dataclass
+class Args:
+    dataset_dir: Path
+    temp_dir: Path
+    transkribus_export_dir: Path
+    log_level: str
 
+
+def create_dataset(args: Args) -> None:
     # Write mapping from urn to language code from dataset info files
     write_urns_to_languages()
 
@@ -164,7 +156,7 @@ if __name__ == "__main__":
     if not temp_train.exists():
         temp_train.mkdir(parents=True)
         transkribus_export_to_lines(
-            base_image_dir=Path("data/transkribus_exports/train_data/train"), output_dir=temp_train
+            base_image_dir=args.transkribus_export_dir / "train_data/train", output_dir=temp_train
         )
     train_metadata_df = encance_metadata_df(pd.read_csv(temp_train / "metadata.csv"))
 
@@ -184,7 +176,7 @@ if __name__ == "__main__":
     if not temp_page_30.exists():
         temp_page_30.mkdir()
         transkribus_export_to_lines(
-            base_image_dir=Path("data/transkribus_exports/train_data/side_30"),
+            base_image_dir=args.transkribus_export_dir / "train_data/side_30",
             output_dir=temp_page_30,
         )
     page_30_metadata_df = pd.read_csv(temp_page_30 / "metadata.csv")
@@ -206,7 +198,7 @@ if __name__ == "__main__":
     if not temp_gt_pix.exists():
         temp_gt_pix.mkdir()
         transkribus_export_to_lines(
-            base_image_dir=Path("data/transkribus_exports/train_data/GT_pix"),
+            base_image_dir=args.transkribus_export_dir / "train_data/GT_pix",
             output_dir=temp_gt_pix,
         )
 
@@ -230,7 +222,7 @@ if __name__ == "__main__":
     temp_test_dir = temp_line_level_dir / "test"
     if not temp_test_dir.exists():
         transkribus_export_to_lines(
-            base_image_dir=Path("data/transkribus_exports/test_data"), output_dir=temp_test_dir
+            base_image_dir=args.transkribus_export_dir / "test_data", output_dir=temp_test_dir
         )
 
     test_metadata_df = encance_metadata_df(pd.read_csv(temp_test_dir / "metadata.csv"))
@@ -244,5 +236,32 @@ if __name__ == "__main__":
 
     test_metadata_df.to_csv(dataset_dir / "test" / "metadata.csv", index=False)
 
-    dataset = load_dataset("imagefolder", data_dir=dataset_dir)
-    logger.info(f"Successfully created 🤗️ image dataset at {dataset_dir}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Create a 🤗️ datasets image dataset from the data")
+    parser.add_argument("dataset_dir", type=Path, help="Output dir to store dataset")
+    parser.add_argument(
+        "--transkribus_export_dir",
+        type=Path,
+        help="Directory where transkribus exports are stored",
+        default=Path("data/transkribus_exports/"),
+    )
+    parser.add_argument(
+        "--temp_dir",
+        type=Path,
+        help="Path to dir to store line segments",
+        default=Path("data/samisk_ocr_temp_line_level"),
+    )
+    parser.add_argument(
+        "--log_level",
+        type=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+        help="Set the logging level",
+    )
+    args = Args(**vars(parser.parse_args()))
+    setup_logging(source_script="create_line_level_dataset", log_level=args.log_level)
+
+    create_dataset(args)
+    dataset = load_dataset("imagefolder", data_dir=args.dataset_dir)
+    logger.info(f"Successfully created 🤗️ image dataset at {args.dataset_dir}")
