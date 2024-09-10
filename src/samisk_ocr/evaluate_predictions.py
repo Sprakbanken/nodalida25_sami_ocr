@@ -101,7 +101,7 @@ if __name__ == "__main__":
             transkribus_df=df, gt_image_dir=args.gt_transcriptions
         )
 
-    gt_df = pd.read_csv(args.dataset / args.split / "metadata.csv")
+    gt_df = pd.read_csv(args.dataset / args.split / "_metadata.csv")
     gt_df["image"] = gt_df.file_name.apply(lambda x: Path(x).name)
     df = df.merge(gt_df, on="image")
     df = df.rename(columns={"text": "ground_truth"})
