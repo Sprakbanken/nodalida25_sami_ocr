@@ -135,6 +135,15 @@ def rearrange_train_and_val_files(
     return train_df, val_df
 
 
+def concat_metadata_dfs(
+    train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame
+) -> pd.DataFrame:
+    train_df["file_name"] = train_df.file_name.apply(lambda x: "train/" + x)
+    val_df["file_name"] = val_df.file_name.apply(lambda x: "val/" + x)
+    test_df["file_name"] = test_df.file_name.apply(lambda x: "test/" + x)
+    return pd.concat((train_df, val_df, test_df), ignore_index=True)
+
+
 @dataclass
 class Args:
     dataset_dir: Path
@@ -170,7 +179,7 @@ def create_dataset(args: Args) -> None:
         temp_train_dir=temp_train,
     )
 
-    val_metadata_df.to_csv(dataset_dir / "val" / "metadata.csv", index=False)
+    val_metadata_df.to_csv(dataset_dir / "val" / "_metadata.csv", index=False)
 
     # Add automatically transcribed page_30 files to train directory
     temp_page_30 = temp_line_level_dir / "side_30"
@@ -219,7 +228,7 @@ def create_dataset(args: Args) -> None:
     gt_pix_metadata_df = encance_metadata_df(gt_pix_metadata_df, urn_to_langcodes=urn_to_langcodes)
     train_metadata_df = pd.concat((train_metadata_df, gt_pix_metadata_df))
 
-    train_metadata_df.to_csv(dataset_dir / "train" / "metadata.csv", index=False)
+    train_metadata_df.to_csv(dataset_dir / "train" / "_metadata.csv", index=False)
 
     # Create line level images from test data
     temp_test_dir = temp_line_level_dir / "test"
@@ -239,7 +248,11 @@ def create_dataset(args: Args) -> None:
         lambda file_name: Path(file_name).name
     )
 
-    test_metadata_df.to_csv(dataset_dir / "test" / "metadata.csv", index=False)
+    test_metadata_df.to_csv(dataset_dir / "test" / "_metadata.csv", index=False)
+    all_df = concat_metadata_dfs(
+        train_df=train_metadata_df, val_df=val_metadata_df, test_df=test_metadata_df
+    )
+    all_df.to_csv(dataset_dir / "metadata.csv", index=False)
 
 
 if __name__ == "__main__":
@@ -268,5 +281,5 @@ if __name__ == "__main__":
     setup_logging(source_script="create_line_level_dataset", log_level=args.log_level)
 
     create_dataset(args)
-    dataset = load_dataset("imagefolder", data_dir=args.dataset_dir)
+    dataset = load_dataset("imagefolder", data_dir=str(args.dataset_dir))
     logger.info(f"Successfully created 🤗️ image dataset at {args.dataset_dir}")

@@ -22,7 +22,7 @@ def write_characters_all_splits(dataset_dir: Path, output_dir: Path):
     for e in dataset_dir.iterdir():
         if e.is_dir():
             split_name = e.name
-            metadata_csv = e / "metadata.csv"
+            metadata_csv = e / "_metadata.csv"
             if metadata_csv.exists():
                 df = pd.read_csv(metadata_csv)
                 chars = get_chars(df)
