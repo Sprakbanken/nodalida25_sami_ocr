@@ -3,18 +3,17 @@ from pathlib import Path
 
 import pytest
 
+from .utils import Config
+
 
 @pytest.fixture
-def setup_and_teardown_test_dirs():
+def setup_and_teardown_test_dirs(tmp_path):
     ids = ["2893103", "2706089"]
 
-    transkribus_exports_in = (
-        Path(__file__).parent.parent / "data/transkribus_exports/train_data/train"
-    )
-    testdata_dir = Path(__file__).parent / "_test_data"
-    transkribus_exports_out = testdata_dir / "transkribus_exports"
-    temp_dir = testdata_dir / "temp_dir"
-    dataset_dir = Path(__file__).parent / "_test_data/dataset_dir"
+    transkribus_exports_in = Config().TRANSKRIBUS_EXPORT_DIR
+    transkribus_exports_out = tmp_path / "transkribus_exports"
+    temp_dir = tmp_path / "temp_dir"
+    dataset_dir = Path(__file__).parent / "dataset_dir"
 
     transkribus_exports_out.mkdir(parents=True)
     temp_dir.mkdir()
@@ -30,9 +29,6 @@ def setup_and_teardown_test_dirs():
     export_out = transkribus_exports_out / "train_data/train" / ids[1]
     export_data = transkribus_exports_in / ids[1]
     shutil.copytree(src=export_data, dst=export_out)
-
-    yield
-    shutil.rmtree(testdata_dir)
 
 
 @pytest.fixture
