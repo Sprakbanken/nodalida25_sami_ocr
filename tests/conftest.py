@@ -13,11 +13,9 @@ def setup_and_teardown_test_dirs(tmp_path):
     transkribus_exports_in = Config().TRANSKRIBUS_EXPORT_DIR
     transkribus_exports_out = tmp_path / "transkribus_exports"
     temp_dir = tmp_path / "temp_dir"
-    dataset_dir = tmp_path / "dataset_dir"
 
     transkribus_exports_out.mkdir(parents=True)
     temp_dir.mkdir()
-    dataset_dir.mkdir()
 
     for e in ["test_data", "train_data/GT_pix", "train_data/side_30", "train_data/train"]:
         export_out = transkribus_exports_out / e / ids[0]
@@ -32,15 +30,21 @@ def setup_and_teardown_test_dirs(tmp_path):
 
 
 @pytest.fixture
-def transkribus_export_dir():
-    return Path(__file__).parent / "_test_data/transkribus_exports"
+def transkribus_export_dir(tmp_path: Path):
+    out = tmp_path / "transkribus_exports"
+    out.mkdir(exist_ok=True)
+    return out
 
 
 @pytest.fixture
-def dataset_dir():
-    return Path(__file__).parent / "_test_data/dataset_dir"
+def dataset_dir(tmp_path: Path):
+    out = tmp_path / "dataset_dir"
+    out.mkdir(exist_ok=True)
+    return out
 
 
 @pytest.fixture
-def temp_dir():
-    return Path(__file__).parent / "_test_data/temp_dir"
+def temp_dir(tmp_path: Path):
+    out = tmp_path / "temp_dir"
+    out.mkdir(exist_ok=True)
+    return out
