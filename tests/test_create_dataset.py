@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 
 import pandas as pd
@@ -6,12 +5,8 @@ import pytest
 from datasets import load_dataset
 
 from samisk_ocr.create_line_level_dataset import Args, create_dataset
-from samisk_ocr.utils import setup_logging
 
 from .utils import Config
-
-logger = logging.getLogger(__name__)
-setup_logging(source_script="test_create_dataset", log_level="DEBUG")
 
 
 @pytest.mark.skipif(
