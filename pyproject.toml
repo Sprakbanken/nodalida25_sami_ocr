@@ -26,6 +26,7 @@ dependencies = [
     "evaluate>=0.4.2",
     "pydantic-settings>=2.4.0",
     "ipywidgets>=8.1.5",
+    "jupyter-collaboration>=2.1.2",
 ]
 
 [build-system]

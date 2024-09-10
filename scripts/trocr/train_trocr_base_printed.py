@@ -53,7 +53,7 @@ train_set = preprocess_dataset(
     min_len=3,
     min_with_height_ratio=2,
     include_page_30=False,
-    include_gt_pix=True,
+    include_gt_pix=False,
 )
 logger.info("Data loaded")
 
