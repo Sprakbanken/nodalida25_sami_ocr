@@ -13,7 +13,7 @@ def setup_and_teardown_test_dirs(tmp_path):
     transkribus_exports_in = Config().TRANSKRIBUS_EXPORT_DIR
     transkribus_exports_out = tmp_path / "transkribus_exports"
     temp_dir = tmp_path / "temp_dir"
-    dataset_dir = Path(__file__).parent / "dataset_dir"
+    dataset_dir = tmp_path / "dataset_dir"
 
     transkribus_exports_out.mkdir(parents=True)
     temp_dir.mkdir()
