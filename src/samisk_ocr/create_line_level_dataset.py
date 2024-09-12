@@ -154,7 +154,11 @@ class Args:
 
 def create_dataset(args: Args) -> None:
     # Get mapping from urn to language code from dataset info files
-    urn_to_langcodes = get_urn_to_langcode_map()
+    urn_to_langcodes = get_urn_to_langcode_map(
+        train_data_path=args.transkribus_export_dir / "train_data/train",
+        gt_pix_path=args.transkribus_export_dir / "train_data/GT_pix",
+        page_30_path=args.transkribus_export_dir / "train_data/side_30",
+    )
 
     dataset_dir = args.dataset_dir
     temp_line_level_dir = args.temp_dir
