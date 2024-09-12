@@ -1,6 +1,6 @@
-import json
+import argparse
 import logging
-from argparse import ArgumentParser
+from dataclasses import dataclass
 from pathlib import Path
 from shutil import copy2
 
@@ -9,9 +9,9 @@ from datasets import load_dataset
 
 from samisk_ocr.transkribus_export_to_line_data import transkribus_export_to_lines
 from samisk_ocr.utils import (
+    get_urn_to_langcode_map,
     image_stem_to_urn_page_line_bbox,
     setup_logging,
-    write_urns_to_languages,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,8 @@ def create_val_split(metadata_df: pd.DataFrame) -> dict[str, list[str]]:
             next_urn, next_nr = urn_lines[i]
             # dont add next urn if total number of val lines goes further from target than it already is
             if (
-                sum_so_far + next_nr > val_num_target
+                sum_so_far
+                and sum_so_far + next_nr > val_num_target
                 and (sum_so_far + next_nr) - val_num_target > diff_to_target
             ):
                 logger.debug(
@@ -55,7 +56,9 @@ def create_val_split(metadata_df: pd.DataFrame) -> dict[str, list[str]]:
     return val_urns
 
 
-def encance_metadata_df(metadata_df: pd.DataFrame) -> pd.DataFrame:
+def encance_metadata_df(
+    metadata_df: pd.DataFrame, urn_to_langcodes: dict[str, list[str]]
+) -> pd.DataFrame:
     """Add more metadata to columns to metadata csv"""
 
     metadata_df["width"] = metadata_df.xmax - metadata_df.xmin
@@ -67,8 +70,6 @@ def encance_metadata_df(metadata_df: pd.DataFrame) -> pd.DataFrame:
     metadata_df["line"] = lines
     metadata_df["text_len"] = metadata_df.text.apply(str).apply(len)
 
-    with open("data/urns_to_langcodes.json") as f:
-        urn_to_langcodes = json.load(f)
     metadata_df["langcodes"] = metadata_df.urn.apply(lambda x: urn_to_langcodes[x])
 
     if "page_30" not in metadata_df.columns:
@@ -134,27 +135,30 @@ def rearrange_train_and_val_files(
     return train_df, val_df
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser(description="Create a 🤗️ datasets image dataset from the data")
-    parser.add_argument("dataset_dir", type=Path, help="Output dir to store dataset")
-    parser.add_argument(
-        "--temp_dir",
-        type=Path,
-        help="Path to dir to store line segments",
-        default=Path("data/samisk_ocr_temp_line_level"),
-    )
-    parser.add_argument(
-        "--log_level",
-        type=str,
-        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        default="INFO",
-        help="Set the logging level",
-    )
-    args = parser.parse_args()
-    setup_logging(source_script="create_line_level_dataset", log_level=args.log_level)
+def concat_metadata_dfs(
+    train_df: pd.DataFrame, val_df: pd.DataFrame, test_df: pd.DataFrame
+) -> pd.DataFrame:
+    train_df["file_name"] = train_df.file_name.apply(lambda x: "train/" + x)
+    val_df["file_name"] = val_df.file_name.apply(lambda x: "val/" + x)
+    test_df["file_name"] = test_df.file_name.apply(lambda x: "test/" + x)
+    return pd.concat((train_df, val_df, test_df), ignore_index=True)
 
-    # Write mapping from urn to language code from dataset info files
-    write_urns_to_languages()
+
+@dataclass
+class Args:
+    dataset_dir: Path
+    temp_dir: Path
+    transkribus_export_dir: Path
+    log_level: str
+
+
+def create_dataset(args: Args) -> None:
+    # Get mapping from urn to language code from dataset info files
+    urn_to_langcodes = get_urn_to_langcode_map(
+        train_data_path=args.transkribus_export_dir / "train_data/train",
+        gt_pix_path=args.transkribus_export_dir / "train_data/GT_pix",
+        page_30_path=args.transkribus_export_dir / "train_data/side_30",
+    )
 
     dataset_dir = args.dataset_dir
     temp_line_level_dir = args.temp_dir
@@ -164,9 +168,11 @@ if __name__ == "__main__":
     if not temp_train.exists():
         temp_train.mkdir(parents=True)
         transkribus_export_to_lines(
-            base_image_dir=Path("data/transkribus_exports/train_data/train"), output_dir=temp_train
+            base_image_dir=args.transkribus_export_dir / "train_data/train", output_dir=temp_train
         )
-    train_metadata_df = encance_metadata_df(pd.read_csv(temp_train / "metadata.csv"))
+    train_metadata_df = encance_metadata_df(
+        pd.read_csv(temp_train / "metadata.csv"), urn_to_langcodes=urn_to_langcodes
+    )
 
     # Create valiation split
     validation_urns = create_val_split(train_metadata_df)
@@ -177,14 +183,14 @@ if __name__ == "__main__":
         temp_train_dir=temp_train,
     )
 
-    val_metadata_df.to_csv(dataset_dir / "val" / "metadata.csv", index=False)
+    val_metadata_df.to_csv(dataset_dir / "val" / "_metadata.csv", index=False)
 
     # Add automatically transcribed page_30 files to train directory
     temp_page_30 = temp_line_level_dir / "side_30"
     if not temp_page_30.exists():
         temp_page_30.mkdir()
         transkribus_export_to_lines(
-            base_image_dir=Path("data/transkribus_exports/train_data/side_30"),
+            base_image_dir=args.transkribus_export_dir / "train_data/side_30",
             output_dir=temp_page_30,
         )
     page_30_metadata_df = pd.read_csv(temp_page_30 / "metadata.csv")
@@ -198,7 +204,9 @@ if __name__ == "__main__":
     page_30_metadata_df["file_name"] = page_30_metadata_df.file_name.apply(
         lambda file_name: "page_30/" + Path(file_name).name
     )
-    page_30_metadata_df = encance_metadata_df(page_30_metadata_df)
+    page_30_metadata_df = encance_metadata_df(
+        page_30_metadata_df, urn_to_langcodes=urn_to_langcodes
+    )
     train_metadata_df = pd.concat((train_metadata_df, page_30_metadata_df))
 
     # Add GTpix files to train directory
@@ -206,7 +214,7 @@ if __name__ == "__main__":
     if not temp_gt_pix.exists():
         temp_gt_pix.mkdir()
         transkribus_export_to_lines(
-            base_image_dir=Path("data/transkribus_exports/train_data/GT_pix"),
+            base_image_dir=args.transkribus_export_dir / "train_data/GT_pix",
             output_dir=temp_gt_pix,
         )
 
@@ -221,19 +229,21 @@ if __name__ == "__main__":
         lambda file_name: "GT_pix/" + Path(file_name).name
     )
 
-    gt_pix_metadata_df = encance_metadata_df(gt_pix_metadata_df)
+    gt_pix_metadata_df = encance_metadata_df(gt_pix_metadata_df, urn_to_langcodes=urn_to_langcodes)
     train_metadata_df = pd.concat((train_metadata_df, gt_pix_metadata_df))
 
-    train_metadata_df.to_csv(dataset_dir / "train" / "metadata.csv", index=False)
+    train_metadata_df.to_csv(dataset_dir / "train" / "_metadata.csv", index=False)
 
     # Create line level images from test data
     temp_test_dir = temp_line_level_dir / "test"
     if not temp_test_dir.exists():
         transkribus_export_to_lines(
-            base_image_dir=Path("data/transkribus_exports/test_data"), output_dir=temp_test_dir
+            base_image_dir=args.transkribus_export_dir / "test_data", output_dir=temp_test_dir
         )
 
-    test_metadata_df = encance_metadata_df(pd.read_csv(temp_test_dir / "metadata.csv"))
+    test_metadata_df = encance_metadata_df(
+        pd.read_csv(temp_test_dir / "metadata.csv"), urn_to_langcodes=urn_to_langcodes
+    )
     test_dir = dataset_dir / "test"
     test_dir.mkdir()
 
@@ -242,7 +252,38 @@ if __name__ == "__main__":
         lambda file_name: Path(file_name).name
     )
 
-    test_metadata_df.to_csv(dataset_dir / "test" / "metadata.csv", index=False)
+    test_metadata_df.to_csv(dataset_dir / "test" / "_metadata.csv", index=False)
+    all_df = concat_metadata_dfs(
+        train_df=train_metadata_df, val_df=val_metadata_df, test_df=test_metadata_df
+    )
+    all_df.to_csv(dataset_dir / "metadata.csv", index=False)
 
-    dataset = load_dataset("imagefolder", data_dir=dataset_dir)
-    logger.info(f"Successfully created 🤗️ image dataset at {dataset_dir}")
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Create a 🤗️ datasets image dataset from the data")
+    parser.add_argument("dataset_dir", type=Path, help="Output dir to store dataset")
+    parser.add_argument(
+        "--transkribus_export_dir",
+        type=Path,
+        help="Directory where transkribus exports are stored",
+        default=Path("data/transkribus_exports/"),
+    )
+    parser.add_argument(
+        "--temp_dir",
+        type=Path,
+        help="Path to dir to store line segments",
+        default=Path("data/samisk_ocr_temp_line_level"),
+    )
+    parser.add_argument(
+        "--log_level",
+        type=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+        help="Set the logging level",
+    )
+    args = Args(**vars(parser.parse_args()))
+    setup_logging(source_script="create_line_level_dataset", log_level=args.log_level)
+
+    create_dataset(args)
+    dataset = load_dataset("imagefolder", data_dir=str(args.dataset_dir))
+    logger.info(f"Successfully created 🤗️ image dataset at {args.dataset_dir}")
