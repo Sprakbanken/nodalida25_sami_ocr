@@ -28,6 +28,14 @@ def setup_and_teardown_test_dirs(tmp_path):
     export_data = transkribus_exports_in / ids[1]
     shutil.copytree(src=export_data, dst=export_out)
 
+    # rename side_30 inner directory (utils.get_urn_to_langcode_map expects filename to contain langcode separated with '_')
+    side_30_inner_dir = next(
+        (transkribus_exports_out / "train_data" / "side_30" / ids[0]).glob("*/")
+    )
+    side_30_inner_dir.replace(
+        transkribus_exports_out / "train_data" / "side_30" / ids[0] / "sme_42"
+    )
+
 
 @pytest.fixture
 def transkribus_export_dir(tmp_path: Path):
