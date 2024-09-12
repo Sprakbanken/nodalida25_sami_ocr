@@ -105,3 +105,8 @@ if __name__ == "__main__":
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
         executor.map(call_transcribe_with_params, all_params)
+
+    # Remove checkpoint models from tessdata
+    for model_name in args.model_names:
+        checkpoint_models_dir = args.tesstrain_repo / "data" / model_name / "tessdata_best/"
+        remove_models_from_tessdata(checkpoint_models_dir, args.tessdata)
