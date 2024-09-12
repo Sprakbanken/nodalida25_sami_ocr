@@ -20,6 +20,8 @@ import samisk_ocr.trocr
 from samisk_ocr.metrics import compute_cer, compute_wer
 from samisk_ocr.mlflow.callbacks import (
     BatchedMultipleEvaluatorsCallback,
+    ConcatCEREvaluator,
+    ConcatWEREvaluator,
     MetricSummaryEvaluator,
     MultipleEvaluatorsCallback,
     RandomImageSaverCallback,
@@ -42,18 +44,18 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger.info("Loading validation data")
 validation_set = preprocess_dataset(
     datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="validation"),
-    min_len=3,
-    min_with_height_ratio=2,
+    min_len=5,
+    min_with_height_ratio=1,
     include_page_30=False,
     include_gt_pix=False,
 )
 logger.info("Loading training data")
 train_set = preprocess_dataset(
     datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="train"),
-    min_len=3,
-    min_with_height_ratio=2,
+    min_len=5,
+    min_with_height_ratio=1,
     include_page_30=False,
-    include_gt_pix=False,
+    include_gt_pix=True,
 )
 logger.info("Data loaded")
 
@@ -109,6 +111,8 @@ evaluators = [
         MetricSummaryEvaluator(compute_wer, partial(np.percentile, q=q), f"{q}percentile_wer")
         for q in [95, 90, 75, 25]
     ],
+    ConcatCEREvaluator(),
+    ConcatWEREvaluator(),
     WorstTranscriptionImageEvaluator(
         key="worst_cer_images", artifact_dir=config.MLFLOW_ARTIFACT_IMAGE_DIR
     ),

@@ -4,9 +4,8 @@ import itertools
 from dataclasses import dataclass
 from operator import attrgetter
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Protocol, Sequence, TypedDict
+from typing import TYPE_CHECKING, Iterable, Sequence, TypedDict
 
-import evaluate
 import matplotlib.pyplot as plt
 import mlflow
 import numpy as np
@@ -15,7 +14,7 @@ import transformers
 from tqdm import tqdm
 from transformers.trainer_callback import TrainerCallback
 
-from samisk_ocr.metrics import compute_cer
+from samisk_ocr.metrics import compute_cer, compute_wer
 
 if TYPE_CHECKING:
     import accelerate
@@ -23,7 +22,8 @@ if TYPE_CHECKING:
     import PIL.Image
     from typing_extensions import Unpack  # type: ignore # False positive
 
-    from samisk_ocr.mlflow.types import Evaluator, Metric, ReductionFunction
+    from samisk_ocr.metrics import Metric
+    from samisk_ocr.mlflow.types import Evaluator, ReductionFunction
     from samisk_ocr.trocr.types import InputData, ProcessedData
 
 
@@ -303,3 +303,39 @@ class WorstTranscriptionImageEvaluator:
         file_name = self.artifact_dir / f"{key_prefix}{self.key}" / f"{step:08d}.png"
         mlflow.log_figure(fig, file_name)
         plt.close(fig)
+
+
+class ConcatCEREvaluator:
+    def __call__(
+        self,
+        data: datasets.arrow_dataset.Dataset,
+        pred_texts: list[str],
+        step: int,
+        key_prefix: str,
+    ) -> None:
+        concat_true = "".join(data["text"])
+        concat_pred = "".join(pred_texts)
+
+        mlflow.log_metric(
+            f"{key_prefix}concat_cer",
+            compute_cer(ground_truth=concat_true, transcription=concat_pred),
+            step=step,
+        )
+
+
+class ConcatWEREvaluator:
+    def __call__(
+        self,
+        data: datasets.arrow_dataset.Dataset,
+        pred_texts: list[str],
+        step: int,
+        key_prefix: str,
+    ) -> None:
+        concat_true = " ".join(data["text"])
+        concat_pred = " ".join(pred_texts)
+
+        mlflow.log_metric(
+            f"{key_prefix}concat_wer",
+            compute_wer(ground_truth=concat_true, transcription=concat_pred),
+            step=step,
+        )
