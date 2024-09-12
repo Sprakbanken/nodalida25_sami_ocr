@@ -149,12 +149,15 @@ class Args:
     dataset_dir: Path
     temp_dir: Path
     transkribus_export_dir: Path
+    language_tsv_parent: Path
     log_level: str
 
 
 def create_dataset(args: Args) -> None:
     # Get mapping from urn to language code from dataset info files
     urn_to_langcodes = get_urn_to_langcode_map(
+        trainset_languages=args.language_tsv_parent / "trainset_languages.tsv",
+        testset_languages=args.language_tsv_parent / "testset_languages.tsv",
         train_data_path=args.transkribus_export_dir / "train_data/train",
         gt_pix_path=args.transkribus_export_dir / "train_data/GT_pix",
         page_30_path=args.transkribus_export_dir / "train_data/side_30",
@@ -267,6 +270,12 @@ if __name__ == "__main__":
         type=Path,
         help="Directory where transkribus exports are stored",
         default=Path("data/transkribus_exports/"),
+    )
+    parser.add_argument(
+        "--language_tsv_parent",
+        type=Path,
+        help="Directory where the 'trainset_languages.tsv' and 'testset_languages.tsv'-files are located",
+        default=Path("data/"),
     )
     parser.add_argument(
         "--temp_dir",
