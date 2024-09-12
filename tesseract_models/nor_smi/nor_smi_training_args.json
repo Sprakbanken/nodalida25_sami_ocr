@@ -1,0 +1,15 @@
+{
+    "model_name": "nor_smi",
+    "tessdata": "/usr/share/tesseract-ocr/5/tessdata/",
+    "tesstrain_repo": "tesstrain",
+    "dataset_path": "data/samisk_ocr_dataset",
+    "filter_wh": true,
+    "filter_len": 4,
+    "page_30": "exclude",
+    "gt_pix": "exclude",
+    "num_epochs": 50,
+    "learning_rate": 0.002,
+    "start_model": "nor",
+    "plot": true,
+    "log_level": "INFO"
+}

@@ -1,3 +1,4 @@
+import json
 import logging
 import subprocess
 from argparse import ArgumentParser
@@ -217,6 +218,12 @@ if __name__ == "__main__":
     if args.start_model:
         tesstrain_arg_list.append(f"START_MODEL={args.start_model}")
 
+    model_stem = "".join([char for char in args.model_name if not char.isnumeric()])
+    tesseract_models_model_dir = Path(f"tesseract_models/{model_stem}")
+    tesseract_models_model_dir.mkdir(exist_ok=True)
+
+    with (tesseract_models_model_dir / f"{args.model_name}_training_args.json").open("w+") as f:
+        json.dump(vars(args), f, ensure_ascii=False, indent=4)
     subprocess.run(tesstrain_arg_list)
     if args.plot:
         subprocess.run(["make", "-C", args.tesstrain_repo, "plot", f"MODEL_NAME={args.model_name}"])
