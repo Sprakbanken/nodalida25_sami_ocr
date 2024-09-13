@@ -29,6 +29,8 @@ def remove_models_from_tessdata(model_dir: Path, tessdata_dir: Path):
 
 
 def transcribe_w_model(model_name: str, image_dir: Path, gt_df: pd.DataFrame, output_file: Path):
+    if output_file.exists():
+        return
     try:
         transcription_df = transcribe(model_name=model_name, image_dir=image_dir, line_level=True)
     except Exception as ex:
@@ -69,7 +71,7 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--dataset_path", type=Path, help="Path to dataset", default=Path("data/samisk_ocr_dataset")
     )
-    parser.add_argument("--splits", help="dataset splits", default=["train", "val"])
+    parser.add_argument("--splits", help="dataset splits", default=["val"])
     parser.add_argument(
         "--output_dir", type=Path, help="Path to directory to store plots", required=True
     )
