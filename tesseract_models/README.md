@@ -1,8 +1,5 @@
 # Forklaring av modellene
 
-## Modellnavn
-smx er en påfunnet iso-kode for samlingen av flere samiske språk.
-
 ## Data
 - Den manuelt annoterte og korrigerte dataen
 - Automatisk transkribert data (side 30 fra masse forskjellige samiske bøker)
