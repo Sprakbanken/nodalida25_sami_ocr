@@ -1,37 +1,51 @@
-from argparse import ArgumentParser
-import pandas as pd
-from pathlib import Path
-from samisk_ocr.utils import setup_logging, clean_transcriptions
-from Levenshtein import distance
 import logging
+from argparse import ArgumentParser
+from pathlib import Path
 from shutil import copy2
+
+import pandas as pd
+from Levenshtein import distance
+
+from samisk_ocr.utils import clean_transcriptions, setup_logging
 
 logger = logging.getLogger(__name__)
 
 
 def first_char_different(df: pd.DataFrame) -> pd.DataFrame:
-    return df[
-        df.ground_truth.apply(lambda s: s[0]) != df.transcription.apply(lambda s: s[0])
-    ]
+    return df[df.ground_truth.apply(lambda s: s[0]) != df.transcription.apply(lambda s: s[0])]
 
 
 def last_char_different(df: pd.DataFrame) -> pd.DataFrame:
-    return df[
-        df.ground_truth.apply(lambda s: s[-1])
-        != df.transcription.apply(lambda s: s[-1])
-    ]
+    return df[df.ground_truth.apply(lambda s: s[-1]) != df.transcription.apply(lambda s: s[-1])]
 
 
 def relative_edit_distance_too_big(df: pd.DataFrame, threshold: float) -> pd.DataFrame:
-    distances = df.apply(
-        lambda row: distance(row.ground_truth, row.transcription), axis=1
-    )
+    distances = df.apply(lambda row: distance(row.ground_truth, row.transcription), axis=1)
     relative_distances = distances / df.ground_truth.apply(len)
     return df[relative_distances > threshold]
 
 
+def copy_lines(df_map: dict[str, pd.DataFrame], output_dir: Path, data_dir: Path) -> None:
+    """Copy line images and ground truth transcriptions from dataframes to output dir"""
+
+    for dirname, df in df_map.items():
+        subdir = output_dir / dirname
+        subdir.mkdir(parents=True)
+
+        for e in df.itertuples:
+            img_file = next(data_dir.glob(f"*/{e.image}"))
+            if not img_file.exists():
+                logger.error(f"File {img_file} from dataframe does not exist in {data_dir}")
+                return None
+            copy2(src=img_file, dst=subdir / img_file.name)
+
+        df.to_csv(subdir / "line_data.csv", index=False)
+
+
 def get_parser() -> ArgumentParser:
-    parser = ArgumentParser(description="Transcribe with tesseract model")
+    parser = ArgumentParser(
+        description="Find (possibly) bad line-bboxes based on wrongful transcriptions"
+    )
     parser.add_argument(
         "csv",
         help=".csv file with predicted transcriptions and ground truth",
@@ -53,6 +67,9 @@ def get_parser() -> ArgumentParser:
         help="Directory to store copied lines",
     )
     parser.add_argument(
+        "--data_dir", type=Path, help="Directory where data is stored", default=Path("../data/")
+    )
+    parser.add_argument(
         "--log_level",
         type=str,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
@@ -60,21 +77,6 @@ def get_parser() -> ArgumentParser:
         help="Set the logging level",
     )
     return parser
-
-
-def copy_lines(df_map: dict[str, pd.DataFrame], output_dir: Path) -> None:
-    """Copy line images and ground truth transcriptions from dataframes to output dir"""
-    data_p = Path("../data/")
-
-    for dirname, df in df_map.items():
-        subdir = output_dir / dirname
-        subdir.mkdir(parents=True)
-
-        for e in df.itertuples:
-            img_file = next(data_p.glob(f"*/{e.image}"))
-            copy2(src=img_file, dst=subdir / img_file.name)
-
-        df.to_csv(subdir / "line_data.csv", index=False)
 
 
 if __name__ == "__main__":
@@ -117,4 +119,4 @@ if __name__ == "__main__":
             "edit_distance_big": edit_distance_big_df,
         }
 
-        copy_lines(df_map=df_map, output_dir=args.output_dir)
+        copy_lines(df_map=df_map, output_dir=args.output_dir, data_dir=args.data_dir)

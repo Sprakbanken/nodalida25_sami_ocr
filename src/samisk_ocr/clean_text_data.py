@@ -11,6 +11,20 @@ def clean(text: str) -> str:
     # replace non-breaking space with normal space
     text = text.replace("\xa0", " ")
 
+    # replace variants of quotation marks
+    text = text.replace("«", '"')
+    text = text.replace("»", '"')
+    text = text.replace("”", '"')
+
+    # replace variants of apostrophe
+    text = text.replace("ʼ", "'")
+    text = text.replace("’", "'")
+    text = text.replace("ʹ", "'")
+
+    # replace Ds
+    text = text.replace("Ð", "Đ")
+    text = text.replace("Ɖ", "Đ")
+
     # replace em dash with en dash
     return text.replace("—", "–")
 

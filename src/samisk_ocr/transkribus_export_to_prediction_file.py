@@ -1,8 +1,10 @@
-import pandas as pd
-from pathlib import Path
 import logging
-from samisk_ocr.utils import setup_logging
 from argparse import ArgumentParser
+from pathlib import Path
+
+import pandas as pd
+
+from samisk_ocr.utils import setup_logging
 
 pil_logger = logging.getLogger("PIL")
 pil_logger.setLevel(logging.INFO)
@@ -27,10 +29,8 @@ def read_text_files(image_dir: Path, df: pd.DataFrame, line: bool) -> pd.DataFra
     return df
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser(
-        description="Create transcription file from transkribus export"
-    )
+def get_parser() -> ArgumentParser:
+    parser = ArgumentParser(description="Create transcription file from transkribus export")
     parser.add_argument(
         "model_name",
         help="Name of transkribus model",
@@ -58,11 +58,13 @@ if __name__ == "__main__":
         default="INFO",
         help="Set the logging level",
     )
+    return parser
 
+
+if __name__ == "__main__":
+    parser = get_parser()
     args = parser.parse_args()
-    setup_logging(
-        source_script="transkribus_export_to_prediction_file", log_level=args.log_level
-    )
+    setup_logging(source_script="transkribus_export_to_prediction_file", log_level=args.log_level)
     if args.line:
         output_dir = args.output_dir / "line_level"
     else:
