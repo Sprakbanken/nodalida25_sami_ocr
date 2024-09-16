@@ -26,7 +26,7 @@ def clean(text: str) -> str:
     text = text.replace("Ɖ", "Đ")
 
     # replace em dash with en dash
-    return text.replace("—", "—")
+    return text.replace("—", "–")
 
 
 def clean_directory(directory: Path):
