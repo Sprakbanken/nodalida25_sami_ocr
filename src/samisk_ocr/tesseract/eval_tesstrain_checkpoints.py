@@ -73,7 +73,10 @@ def get_parser() -> ArgumentParser:
     )
     parser.add_argument("--splits", help="dataset splits", default=["val"])
     parser.add_argument(
-        "--output_dir", type=Path, help="Path to directory to store plots", required=True
+        "--output_dir",
+        type=Path,
+        help="Path to directory to store evaluation results",
+        required=True,
     )
     return parser
 
@@ -92,7 +95,7 @@ if __name__ == "__main__":
         copy_models_to_tessdata(checkpoint_models_dir, args.tessdata)
 
         for split in args.splits:
-            gt_df = pd.read_csv(args.dataset_path / split / "metadata.csv")
+            gt_df = pd.read_csv(args.dataset_path / split / "_metadata.csv")
             gt_df["image"] = gt_df.file_name.apply(lambda x: Path(x).name)
             gt_df = gt_df.rename(columns={"text": "ground_truth"})
 
