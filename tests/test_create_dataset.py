@@ -17,6 +17,7 @@ def test_create_line_level_dataset(temp_dir: Path, transkribus_export_dir: Path,
     assert len(list(dataset_dir.iterdir())) == 0
     args = Args(
         dataset_dir=dataset_dir,
+        language_tsv_parent=transkribus_export_dir.parent,
         temp_dir=temp_dir,
         transkribus_export_dir=transkribus_export_dir,
         log_level="",
