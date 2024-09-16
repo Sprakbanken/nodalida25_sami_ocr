@@ -83,7 +83,7 @@ def create_tesstrain_data(
         train_ds=train_dataset,
         val_ds=val_dataset,
         output_dir=model_data_dir,
-        prefix=f"data/{model_traindata_dir.name}",
+        prefix=f"data/{model_traindata_dir.name}/",
     )
 
 
