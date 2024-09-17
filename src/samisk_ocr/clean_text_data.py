@@ -103,19 +103,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     setup_logging(source_script="clean_text_data", log_level=args.log_level)
 
-    if args.output_dir and args.only_copy_cleaned:
-        clean_directory_to_output_dir_only_copy_cleaned(
-            directory=args.input_dir, output_directory=args.output_dir
+    if args.output_dir:
+        clean_directory_to_output_dir(
+            directory=args.input_dir, output_directory=args.output_dir, only_copy_cleaned=args.only_copy_cleaned
         )
-        logger.info(
-            f"Copied clean versions of the textfiles that needed cleaning in {args.input_dir} to {args.output_dir}"
-        )
-
-    elif args.output_dir:
-        clean_directory_to_output_dir(directory=args.input_dir, output_directory=args.output_dir)
-        logger.info(
-            f"Copied clean versions of all textfiles in {args.input_dir} to {args.output_dir}"
-        )
+        
+        if args.only_copy_cleaned:
+            msg = "Copied clean versions of the textfiles that needed cleaning in %s to %s"
+        else:
+            msg = "Copied clean versions of all textfiles in %s to %s"
+        logger.info(msg, args.input_dir, args.output_dir)
 
     else:
         clean_directory_in_place(args.input_dir)
