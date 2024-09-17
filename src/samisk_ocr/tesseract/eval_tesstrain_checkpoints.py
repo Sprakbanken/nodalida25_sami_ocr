@@ -28,7 +28,7 @@ def remove_models_from_tessdata(model_dir: Path, tessdata_dir: Path):
             tessdata_model.unlink()
 
 
-def transcribe_w_model(model_name: str, image_dir: Path, gt_df: pd.DataFrame, output_file: Path):
+def transcribe_with_model(model_name: str, image_dir: Path, gt_df: pd.DataFrame, output_file: Path):
     if output_file.exists():
         return
     try:
