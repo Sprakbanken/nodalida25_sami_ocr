@@ -42,37 +42,18 @@ def clean_directory_in_place(directory: Path):
     logger.debug(f"Cleaned {i} textfiles")
 
 
-def clean_directory_to_output_dir_only_copy_cleaned(directory: Path, output_directory: Path):
+def clean_directory_to_output_dir(directory: Path, output_directory: Path, only_copy_cleaned: bool):
     i = 0
     for text_file in directory.glob("**/*.txt"):
         text_pre = text_file.read_text()
         text = clean(text_pre)
-        if text != text_pre:
+        if text != text_pre or not only_copy_cleaned:
             i += 1
-
             out_parent = output_directory / text_file.parent.relative_to(directory)
             out_parent.mkdir(exist_ok=True, parents=True)
             out_file = out_parent / text_file.name
-
             with out_file.open("w+") as f:
                 f.write(text)
-    logger.debug(f"Cleaned {i} textfiles")
-
-
-def clean_directory_to_output_dir(directory: Path, output_directory: Path):
-    i = 0
-    for text_file in directory.glob("**/*.txt"):
-        text_pre = text_file.read_text()
-        text = clean(text_pre)
-
-        i += text != text_pre
-
-        out_parent = output_directory / text_file.parent.relative_to(directory)
-        out_parent.mkdir(exist_ok=True, parents=True)
-        out_file = out_parent / text_file.name
-
-        with out_file.open("w+") as f:
-            f.write(text)
     logger.debug(f"Cleaned {i} textfiles")
 
 
@@ -105,9 +86,11 @@ if __name__ == "__main__":
 
     if args.output_dir:
         clean_directory_to_output_dir(
-            directory=args.input_dir, output_directory=args.output_dir, only_copy_cleaned=args.only_copy_cleaned
+            directory=args.input_dir,
+            output_directory=args.output_dir,
+            only_copy_cleaned=args.only_copy_cleaned,
         )
-        
+
         if args.only_copy_cleaned:
             msg = "Copied clean versions of the textfiles that needed cleaning in %s to %s"
         else:
