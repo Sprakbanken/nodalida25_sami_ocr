@@ -36,7 +36,7 @@ if __name__ == "__main__":
         input_dir=args.input_dir, output_dir=args.output_dir
     ):
         logger.error(f"Some dirs already exists in {args.output_dir}, but overwrite is not flagged")
-        exit()
+        exit(1)
 
     for sub_dir in args.input_dir.glob("*/"):
         copytree(sub_dir, dst=args.output_dir / sub_dir.name, dirs_exist_ok=True)
