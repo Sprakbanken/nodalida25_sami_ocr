@@ -27,6 +27,8 @@ dependencies = [
     "evaluate>=0.4.2",
     "pydantic-settings>=2.4.0",
     "ipywidgets>=8.1.5",
+    "statsmodels>=0.14.2",
+    "kaleido==0.2.1",
 ]
 
 [build-system]

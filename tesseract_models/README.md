@@ -1,17 +1,15 @@
-# Forklaring av modellene
-
-## Modellnavn
-smx er en påfunnet iso-kode for samlingen av flere samiske språk.
+# Forklaring av tesseract-modellene
 
 ## Data
-- Den manuelt annoterte og korrigerte dataen
-- Automatisk transkribert data (side 30 fra masse forskjellige samiske bøker)
--
+- Manuelt annotert og korrigert samisk data
+- Manuelt annotert og korrigert norsk data (gt_pix)
+- Automatisk transkribert* data (side 30 fra masse forskjellige samiske bøker)
+
+*Med en modell vi har trent i transkribus
 
 ### Dataprosessering
 - a) fjerne linjene hvor bredden er mindre enn høyden
-- b) rotere linjene hvor bredden er mindre enn halvparten av høyden
-- c) fjerne linjene hvor transkripsjonen er kortere enn x tegn
 
 ## Modeller
-TBA
+- smi: bare trent på den manuelt annoterte samiske dataen
+- nor_smi: norsk tesseractmodell videretrent på den manuelt annoterte samiske dataen
