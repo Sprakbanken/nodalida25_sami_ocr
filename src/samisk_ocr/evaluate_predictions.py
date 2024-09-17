@@ -128,7 +128,7 @@ if __name__ == "__main__":
         transcription=" ".join(df.transcription), ground_truth=" ".join(df.ground_truth)
     )
     collection_level_scores["CER_concat"] = compute_cer(
-        transcription=" ".join(df.transcription), ground_truth=" ".join(df.ground_truth)
+        transcription="".join(df.transcription), ground_truth="".join(df.ground_truth)
     )
 
     if args.base_model_language:

@@ -43,7 +43,7 @@ def transcribe_w_model(model_name: str, image_dir: Path, gt_df: pd.DataFrame, ou
         transcription=" ".join(df.transcription), ground_truth=" ".join(df.ground_truth)
     )
     CER_concat = compute_cer(
-        transcription=" ".join(df.transcription), ground_truth=" ".join(df.ground_truth)
+        transcription="".join(df.transcription), ground_truth="".join(df.ground_truth)
     )
     scores = {
         "model_name": model_name,
