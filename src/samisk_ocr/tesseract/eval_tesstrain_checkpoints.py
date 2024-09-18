@@ -56,7 +56,7 @@ def transcribe_with_model(model_name: str, image_dir: Path, gt_df: pd.DataFrame,
 
 
 def call_transcribe_with_params(params):
-    transcribe_w_model(*params)
+    transcribe_with_model(*params)
 
 
 def get_parser() -> ArgumentParser:
@@ -89,9 +89,9 @@ if __name__ == "__main__":
     all_params = []
 
     for model_name in args.model_names:
+        logger.debug("Model name: %s", model_name)
         checkpoint_models_dir = args.tesstrain_repo / "data" / model_name / "tessdata_best/"
         assert checkpoint_models_dir.exists()
-
         copy_models_to_tessdata(checkpoint_models_dir, args.tessdata)
 
         for split in args.splits:
