@@ -6,10 +6,10 @@ from string import punctuation, whitespace
 
 import pandas as pd
 
-from samisk_ocr.map_transkribus_lines_to_gt_lines import (
+from samisk_ocr.metrics import SpecialCharacterF1, compute_cer, compute_wer
+from samisk_ocr.transkribus.map_transkribus_lines_to_gt_lines import (
     map_transkribus_image_lines_to_gt_image_lines,
 )
-from samisk_ocr.metrics import SpecialCharacterF1, compute_cer, compute_wer
 from samisk_ocr.utils import setup_logging
 from samisk_ocr.write_characters import get_chars
 
