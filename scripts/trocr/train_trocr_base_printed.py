@@ -44,7 +44,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger.info("Loading validation data")
 validation_set = preprocess_dataset(
     datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="validation"),
-    min_len=5,
+    min_len=1,
     min_with_height_ratio=1,
     include_page_30=False,
     include_gt_pix=False,
@@ -52,9 +52,9 @@ validation_set = preprocess_dataset(
 logger.info("Loading training data")
 train_set = preprocess_dataset(
     datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="train"),
-    min_len=5,
+    min_len=1,
     min_with_height_ratio=1,
-    include_page_30=False,
+    include_page_30=True,
     include_gt_pix=True,
 )
 logger.info("Data loaded")
@@ -142,7 +142,7 @@ with mlflow.start_run() as run:
         #
         # Training paramters
         fp16=False,
-        learning_rate=3e-6,
+        learning_rate=1e-6,
         num_train_epochs=200,
         per_device_train_batch_size=8,
         remove_unused_columns=False,
