@@ -86,10 +86,9 @@ def get_overall_fig(model_stem: str, df: pd.DataFrame, color_map: dict[str, str]
         iteration: get_best_iteration(df=df_, score="CER", split="val")
         for iteration, df_ in df.groupby("training_iteration")
     }
-    best_iterations[0] = 0
-    df["total_iterations"] = df.apply(
-        lambda row: row.iteration + best_iterations[row.training_iteration - 1], axis=1
-    )
+    df["total_iterations"] = df.iteration
+    for training_iteration, best_checkpoint in best_iterations.items():
+        df.loc[df.training_iteration > training_iteration, "total_iterations"] += best_checkpoint
 
     fig = go.Figure()
     fig.update_layout(
