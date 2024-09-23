@@ -25,6 +25,13 @@ def get_best_iteration(df: pd.DataFrame, score: str, split: str) -> int:
     return df[df.score == score][df.split == split].sort_values("value").head(1).iteration.item()
 
 
+def get_best_score(df: pd.DataFrame, score: str, split: str) -> float:
+    """Assumes df is already filtered on model name/stem"""
+    return round(
+        df[df.score == score][df.split == split].sort_values("value").head(1).value.item() * 100, 2
+    )
+
+
 def get_fig(model_name: str, df: pd.DataFrame, color_map: dict[str, str]) -> go.Figure:
     df = df[df.model_name == model_name]
 
@@ -59,12 +66,14 @@ def get_fig(model_name: str, df: pd.DataFrame, color_map: dict[str, str]) -> go.
 
     best_cer_iteration = get_best_iteration(df=df, score="CER", split="val")
     best_cer_iteration = "{:_}".format(best_cer_iteration)
+    best_cer = get_best_score(df=df, score="CER", split="val")
 
     best_wer_iteration = get_best_iteration(df=df, score="WER", split="val")
     best_wer_iteration = "{:_}".format(best_wer_iteration)
+    best_wer = get_best_score(df=df, score="WER", split="val")
 
     fig.update_layout(
-        title=f"CER and WER scores on {model_name} training checkpoints <br>Best WER iteration: {best_wer_iteration}<br>Best CER iteration: {best_cer_iteration}",
+        title=f"CER and WER scores on {model_name} training checkpoints <br>Best WER: {best_wer}%,  iteration: {best_wer_iteration}<br>Best CER: {best_cer}%, iteration: {best_cer_iteration}",
         xaxis_title="Number of iterations",
         yaxis_title="Score",
     )
@@ -122,6 +131,8 @@ def get_overall_fig(model_stem: str, df: pd.DataFrame, color_map: dict[str, str]
     best_cer_iteration = best_cer.iteration.item()
     best_cer_iteration = "{:_}".format(best_cer_iteration)
 
+    best_cer_score = get_best_score(df, score="CER", split="val")
+
     best_wer = (
         df[df.model_stem == model_stem][df.score == "WER"][df.split == "val"]
         .sort_values("value")
@@ -133,8 +144,10 @@ def get_overall_fig(model_stem: str, df: pd.DataFrame, color_map: dict[str, str]
     best_wer_iteration = best_wer.iteration.item()
     best_wer_iteration = "{:_}".format(best_wer_iteration)
 
+    best_wer_score = get_best_score(df, score="WER", split="val")
+
     fig.update_layout(
-        title=f"CER and WER scores on {model_stem} training checkpoints <br>Best WER iteration: training iteration: {best_wer_training_iteration}, checkpoint: {best_wer_iteration} <br>Best CER iteration: training iteration: {best_cer_training_iteration}, checkpoint: {best_cer_iteration}",
+        title=f"CER and WER scores on {model_stem} training checkpoints <br>Best WER: {best_wer_score}%, training iteration: {best_wer_training_iteration}, checkpoint: {best_wer_iteration} <br>Best CER: {best_cer_score}%, training iteration: {best_cer_training_iteration}, checkpoint: {best_cer_iteration}",
         xaxis_title="Total number of iterations",
         yaxis_title="Score",
     )
@@ -179,12 +192,12 @@ if __name__ == "__main__":
 
     # Plot and save for each training iteration
     df = df.sort_values("model_name")
-    for model_stem in df.model_name.unique():
-        fig = get_fig(model_name=model_stem, df=df, color_map=color_map)
-        model_stem = get_model_stem(model_name=model_stem)
+    for model_name in df.model_name.unique():
+        fig = get_fig(model_name=model_name, df=df, color_map=color_map)
+        model_stem = get_model_stem(model_name=model_name)
         output_dir = Path(f"tesseract_models/{model_stem}")
         output_dir.mkdir(exist_ok=True)
-        fig.write_image(output_dir / f"{model_stem}_checkpoints.png")
+        fig.write_image(output_dir / f"{model_name}_checkpoints.png")
 
     # Plot and save across training iterations
     df["model_stem"] = df.model_name.apply(get_model_stem)
