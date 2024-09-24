@@ -45,17 +45,19 @@ logger.info("Loading validation data")
 validation_set = preprocess_dataset(
     datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="validation"),
     min_len=1,
-    min_with_height_ratio=1,
+    filter_width=True,
     include_page_30=False,
     include_gt_pix=False,
+    min_len_page_30=5,
 )
 logger.info("Loading training data")
 train_set = preprocess_dataset(
     datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="train"),
     min_len=1,
-    min_with_height_ratio=1,
+    filter_width=True,
     include_page_30=True,
     include_gt_pix=True,
+    min_len_page_30=5,
 )
 logger.info("Data loaded")
 

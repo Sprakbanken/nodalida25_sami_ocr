@@ -39,6 +39,7 @@ distribution = true
 [tool.pdm.dev-dependencies]
 dev = [
     "ruff>=0.5.1",
+    "hypothesis>=6.112.1",
 ]
 
 [tool.ruff]
