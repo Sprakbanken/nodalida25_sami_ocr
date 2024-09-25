@@ -12,7 +12,7 @@
 - a) fjerne linjene hvor bredden er mindre enn høyden
 - b) fjerne linjene hvor transkripsjonene er kortere enn 5 tegn
 
-
+a) gjøres for all data, b) gjøres kun for auto_smi
 
 ## Modeller
 
