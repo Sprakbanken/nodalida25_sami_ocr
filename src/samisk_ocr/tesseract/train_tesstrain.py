@@ -37,11 +37,12 @@ def create_train_eval_lists(train_ds: Dataset, val_ds: Dataset, output_dir: Path
 
 
 def create_tesstrain_data(
-    path_to_dataset: Path,
+    path_to_dataset: str,
     model_data_dir: Path,
     model_traindata_dir: Path,
     filter_wh: bool,
     filter_len: int,
+    page_30_len: int,
     page_30: Literal["exclude", "include", "only"],
     gt_pix: Literal["exclude", "include", "only"],
 ):
@@ -54,6 +55,10 @@ def create_tesstrain_data(
         train_dataset = train_dataset.filter(lambda x: x["width"] > x["height"])
     if filter_len:
         train_dataset = train_dataset.filter(lambda x: x["text_len"] > filter_len)
+    if page_30_len:
+        train_dataset = train_dataset.filter(
+            lambda x: not x["page_30"] or x["text_len"] > page_30_len
+        )
     if page_30 == "exclude":
         train_dataset = train_dataset.filter(lambda x: not x["page_30"])
     elif page_30 == "only":
@@ -139,6 +144,13 @@ def get_parser() -> ArgumentParser:
         help="Whether to include, exclude or transfer only the page_30 data",
     )
     parser.add_argument(
+        "--filter_len_30",
+        type=int,
+        metavar="n",
+        help="If provided, will filter out page_30 images where transcription is shorter than n",
+    )
+
+    parser.add_argument(
         "--gt_pix",
         choices=["only", "include", "exclude"],
         default="exclude",
@@ -201,6 +213,7 @@ if __name__ == "__main__":
             filter_len=args.filter_len,
             filter_wh=args.filter_wh,
             page_30=args.page_30,
+            page_30_len=args.filter_len_30,
             gt_pix=args.gt_pix,
         )
 
