@@ -78,13 +78,20 @@ def get_parser() -> ArgumentParser:
         help="Path to directory to store evaluation results",
         required=True,
     )
+    parser.add_argument(
+        "--log_level",
+        type=str,
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+        help="Set the logging level",
+    )
     return parser
 
 
 if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
-    setup_logging("eval_tesstrain_checkpoints", log_level="DEBUG")
+    setup_logging("eval_tesstrain_checkpoints", log_level=args.log_level)
 
     all_params = []
 
