@@ -43,11 +43,7 @@ def image_stem_to_urn_line_bbox(image_stem: str) -> tuple[str, int, Bbox]:
 
 
 def image_stem_to_urn_page_line_bbox(image_stem: str) -> tuple[str, int, int, Bbox]:
-    try:
-        bbox = Bbox(*[int(e) for e in image_stem[-19:].split("_")])
-    except Exception:
-        print(image_stem)
-        return
+    bbox = Bbox(*[int(e) for e in image_stem[-19:].split("_")])
     urn_page, line = image_stem[:-20].rsplit("_", maxsplit=1)
     urn, page = page_image_stem_to_urn_page(urn_page)
     return (urn, page, int(line), bbox)
