@@ -21,7 +21,7 @@ a) gjøres for all data, b) gjøres kun for auto_smi
 - nor_smi: norsk tesseractmodell videretrent på den manuelt annoterte samiske dataen (gt_smi)
 - nor_smi_nor: norsk tesseractmodell videretrent på den manuelt annoterte dataen (gt_smi + gt_nor)
 - nor_smi_smi: norsk tesseractmodell videretrent på den samiske dataen (gt_smi, auto_smi)
-
+- nor_all:  norsk tesseractmodell videretrent på all dataen (gt_smi, auto_smi, gt_nor)
 
 ### Basemodell-eksperiment
 Trent én runde med tesseract på forskjellige basemodeller med vår data.
