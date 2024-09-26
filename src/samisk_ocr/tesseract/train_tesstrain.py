@@ -123,7 +123,7 @@ def get_parser() -> ArgumentParser:
         description="Create training data and training script to train tesseract model"
     )
     parser.add_argument("model_name", help="Name of tesseract model")
-    parser.add_argument("--tessdata", help="Path to tessdata (see tesseract_howto)")
+    parser.add_argument("--tessdata", help="Path to tessdata (see tesseract_howto)", required=True)
     parser.add_argument("--tesstrain_repo", help="Path to tesstrain repo", default="tesstrain")
     parser.add_argument("--dataset_path", help="Path to dataset", default="data/samisk_ocr_dataset")
     parser.add_argument(
