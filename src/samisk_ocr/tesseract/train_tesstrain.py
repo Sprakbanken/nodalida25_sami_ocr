@@ -191,8 +191,6 @@ if __name__ == "__main__":
 
     model_traindata_dir = Path(args.tesstrain_repo) / "data" / f"{args.model_name}-ground-truth/"
     model_data_dir = Path(args.tesstrain_repo) / "data" / args.model_name
-    model_traindata_dir.mkdir()
-    model_data_dir.mkdir()
 
     if args.copy_data:
         other_model_traindata_dir = (
@@ -202,10 +200,15 @@ if __name__ == "__main__":
         if not (other_model_traindata_dir.exists() and other_model_data_dir.exists()):
             logger.error(f"copy_data is flagged but {args.copy_data} model data files do not exist")
             exit()
+
+        model_traindata_dir.mkdir()
+        model_data_dir.mkdir()
         copy_data(
             model_data_dir, model_traindata_dir, other_model_traindata_dir, other_model_data_dir
         )
     else:
+        model_traindata_dir.mkdir()
+        model_data_dir.mkdir()
         create_tesstrain_data(
             path_to_dataset=args.dataset_path,
             model_data_dir=model_data_dir,
