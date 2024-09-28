@@ -16,7 +16,7 @@ def should_include_dataset_row(
 ) -> bool:
     if row["text_len"] < min_len:
         return False
-    if filter_width and row["width"] < row["height"]:
+    if filter_width and row["width"] <= row["height"]:
         return False
     if row["gt_pix"] and not include_gt_pix:
         return False

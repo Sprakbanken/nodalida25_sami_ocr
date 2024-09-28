@@ -138,14 +138,14 @@ with mlflow.start_run() as run:
     # Setup trainer args
     batch_size = 8
     steps_per_epoch = ceil(len(processed_train_set) / batch_size)
-    eval_steps = 5 * steps_per_epoch
+    eval_steps = 2 * steps_per_epoch
     batched_eval_frequency = steps_per_epoch // 2
     training_args = Seq2SeqTrainingArguments(
         #
         # Training paramters
         fp16=False,
         learning_rate=1e-6,
-        num_train_epochs=200,
+        num_train_epochs=100,
         per_device_train_batch_size=8,
         remove_unused_columns=False,
         #
