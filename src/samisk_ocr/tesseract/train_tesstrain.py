@@ -37,11 +37,12 @@ def create_train_eval_lists(train_ds: Dataset, val_ds: Dataset, output_dir: Path
 
 
 def create_tesstrain_data(
-    path_to_dataset: Path,
+    path_to_dataset: str,
     model_data_dir: Path,
     model_traindata_dir: Path,
     filter_wh: bool,
     filter_len: int,
+    page_30_len: int,
     page_30: Literal["exclude", "include", "only"],
     gt_pix: Literal["exclude", "include", "only"],
 ):
@@ -54,6 +55,10 @@ def create_tesstrain_data(
         train_dataset = train_dataset.filter(lambda x: x["width"] > x["height"])
     if filter_len:
         train_dataset = train_dataset.filter(lambda x: x["text_len"] > filter_len)
+    if page_30_len:
+        train_dataset = train_dataset.filter(
+            lambda x: not x["page_30"] or x["text_len"] > page_30_len
+        )
     if page_30 == "exclude":
         train_dataset = train_dataset.filter(lambda x: not x["page_30"])
     elif page_30 == "only":
@@ -118,7 +123,7 @@ def get_parser() -> ArgumentParser:
         description="Create training data and training script to train tesseract model"
     )
     parser.add_argument("model_name", help="Name of tesseract model")
-    parser.add_argument("--tessdata", help="Path to tessdata (see tesseract_howto)")
+    parser.add_argument("--tessdata", help="Path to tessdata (see tesseract_howto)", required=True)
     parser.add_argument("--tesstrain_repo", help="Path to tesstrain repo", default="tesstrain")
     parser.add_argument("--dataset_path", help="Path to dataset", default="data/samisk_ocr_dataset")
     parser.add_argument(
@@ -138,6 +143,13 @@ def get_parser() -> ArgumentParser:
         default="exclude",
         help="Whether to include, exclude or transfer only the page_30 data",
     )
+    parser.add_argument(
+        "--filter_len_30",
+        type=int,
+        metavar="n",
+        help="If provided, will filter out page_30 images where transcription is shorter than n",
+    )
+
     parser.add_argument(
         "--gt_pix",
         choices=["only", "include", "exclude"],
@@ -179,8 +191,6 @@ if __name__ == "__main__":
 
     model_traindata_dir = Path(args.tesstrain_repo) / "data" / f"{args.model_name}-ground-truth/"
     model_data_dir = Path(args.tesstrain_repo) / "data" / args.model_name
-    model_traindata_dir.mkdir()
-    model_data_dir.mkdir()
 
     if args.copy_data:
         other_model_traindata_dir = (
@@ -190,10 +200,15 @@ if __name__ == "__main__":
         if not (other_model_traindata_dir.exists() and other_model_data_dir.exists()):
             logger.error(f"copy_data is flagged but {args.copy_data} model data files do not exist")
             exit()
+
+        model_traindata_dir.mkdir()
+        model_data_dir.mkdir()
         copy_data(
             model_data_dir, model_traindata_dir, other_model_traindata_dir, other_model_data_dir
         )
     else:
+        model_traindata_dir.mkdir()
+        model_data_dir.mkdir()
         create_tesstrain_data(
             path_to_dataset=args.dataset_path,
             model_data_dir=model_data_dir,
@@ -201,6 +216,7 @@ if __name__ == "__main__":
             filter_len=args.filter_len,
             filter_wh=args.filter_wh,
             page_30=args.page_30,
+            page_30_len=args.filter_len_30,
             gt_pix=args.gt_pix,
         )
 
