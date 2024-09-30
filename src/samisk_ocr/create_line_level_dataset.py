@@ -7,7 +7,7 @@ from shutil import copy2
 import pandas as pd
 from datasets import load_dataset
 
-from samisk_ocr.transkribus.transkribus_export_to_line_data import transkribus_export_to_lines
+from samisk_ocr.transkribus.export_to_line_data import transkribus_export_to_lines
 from samisk_ocr.utils import (
     get_urn_to_langcode_map,
     image_stem_to_urn_page_line_bbox,

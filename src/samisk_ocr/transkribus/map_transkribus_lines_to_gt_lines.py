@@ -1,9 +1,12 @@
+import logging
 from functools import partial
 from pathlib import Path
 
 import pandas as pd
 
-from samisk_ocr.utils import Bbox, image_stem_to_urn_line_bbox
+from samisk_ocr.utils import Bbox, image_stem_to_pageurn_line_bbox
+
+logger = logging.getLogger(__name__)
 
 
 def calculate_overlap_area(bbox1: Bbox, bbox2: Bbox) -> float:
@@ -41,15 +44,15 @@ def calculate_overlap_area(bbox1: Bbox, bbox2: Bbox) -> float:
 
 
 def line_image_dir_to_urn_line_bbox_df(
-    image_dir: Path, image_suffixes=[".tif", ".png", ".jpg"]
+    image_dir: Path, image_suffixes=[".tif", ".png", ".jpg", ".jpeg"]
 ) -> pd.DataFrame:
     images = pd.Series([e for suf in image_suffixes for e in image_dir.glob(f"*{suf}")])
     df = pd.DataFrame({"image": images.apply(lambda x: x.name)})
     image_stems = images.apply(lambda x: x.stem)
-    urn, line, bbox = zip(*image_stems.apply(image_stem_to_urn_line_bbox))
-    df["urn"] = urn
-    df["line"] = line
-    df["bbox"] = bbox
+    page_urns, lines, bboxes = zip(*image_stems.apply(image_stem_to_pageurn_line_bbox))
+    df["page_urn"] = page_urns
+    df["line"] = lines
+    df["bbox"] = bboxes
     return df
 
 
@@ -58,17 +61,22 @@ def map_transkribus_image_lines_to_gt_image_lines(
 ) -> pd.Series:
     """Find the line images from the ground truth image directory that has the largest overlaps with the transkribus line images"""
     gt_df = line_image_dir_to_urn_line_bbox_df(image_dir=gt_image_dir)
-    assert len(gt_df) == len(transkribus_df)
+
+    if len(gt_df) != len(transkribus_df):
+        logger.warning(
+            "Number of lines in transkribus prediction (%s) is not the same as in ground truth (%s)",
+            (len(transkribus_df), len(gt_df)),
+        )
 
     transkribus_image_stems = transkribus_df.image.apply(lambda x: Path(x).stem)
-    urns, lines, bboxes = zip(*transkribus_image_stems.apply(image_stem_to_urn_line_bbox))
-    transkribus_df["urn"] = urns
+    page_urns, lines, bboxes = zip(*transkribus_image_stems.apply(image_stem_to_pageurn_line_bbox))
+    transkribus_df["page_urn"] = page_urns
     transkribus_df["line"] = lines
     transkribus_df["bbox"] = bboxes
 
     dfs = []
-    for urn, gt_df_ in gt_df.groupby("urn"):
-        transkribus_df_ = transkribus_df[transkribus_df.urn == urn]
+    for page_urn, gt_df_ in gt_df.groupby("page_urn"):
+        transkribus_df_ = transkribus_df[transkribus_df.page_urn == page_urn]
         assert len(transkribus_df_) == len(gt_df_)
 
         transkribus_df_ = transkribus_df_.sort_values("line")

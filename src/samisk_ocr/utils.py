@@ -32,13 +32,13 @@ def page_image_stem_to_urn_page(image_stem: str) -> tuple[str, int]:
     return pre, pd.NA
 
 
-def image_stem_to_urn_line_bbox(image_stem: str) -> tuple[str, int, Bbox]:
+def image_stem_to_pageurn_line_bbox(image_stem: str) -> tuple[str, int, Bbox]:
     """With page number as part of urn"""
 
     bbox = Bbox(*[int(e) for e in image_stem[-19:].split("_")])
 
-    urn, line = image_stem[:-20].rsplit("_", maxsplit=1)
-    return (urn, int(line), bbox)
+    page_urn, line = image_stem[:-20].rsplit("_", maxsplit=1)
+    return (page_urn, int(line), bbox)
 
 
 def image_stem_to_urn_page_line_bbox(image_stem: str) -> tuple[str, int, int, Bbox]:
