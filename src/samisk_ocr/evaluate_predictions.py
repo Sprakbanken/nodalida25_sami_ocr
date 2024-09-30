@@ -28,9 +28,14 @@ def get_language_specific_chars(base_model_language: str, gt_chars: str) -> list
             )
         case "fin":
             base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÄÖåäö"
+        case "":
+            logger.info(
+                f"No base model language, using gt_chars - english alphabet to find special characters"
+            )
+            base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         case _:
             logger.warning(
-                f"No alphabet found for base model language {base_model_language}, using default alphabet (eng)"
+                f"No alphabet found for base model language {base_model_language}, using gt_chars - english alphabet to find special characters"
             )
             base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
@@ -112,18 +117,18 @@ if __name__ == "__main__":
         output_dir = args.output_dir / "page_level" / args.model_name
     output_dir.mkdir(parents=True)
 
-    df["WER"] = df.apply(
+    df["CER"] = df.apply(
         lambda row: compute_cer(transcription=row.transcription, ground_truth=row.ground_truth),
         axis=1,
     )
-    df["CER"] = df.apply(
+    df["WER"] = df.apply(
         lambda row: compute_wer(transcription=row.transcription, ground_truth=row.ground_truth),
         axis=1,
     )
 
     collection_level_scores = {}
-    collection_level_scores["WER"] = df.WER.mean()
-    collection_level_scores["CER"] = df.CER.mean()
+    collection_level_scores["WER_mean"] = df.WER.mean()
+    collection_level_scores["CER_mean"] = df.CER.mean()
     collection_level_scores["WER_concat"] = compute_wer(
         transcription=" ".join(df.transcription), ground_truth=" ".join(df.ground_truth)
     )
@@ -131,30 +136,27 @@ if __name__ == "__main__":
         transcription="".join(df.transcription), ground_truth="".join(df.ground_truth)
     )
 
-    if args.base_model_language:
-        gt_chars = get_chars(df, text_column="ground_truth")
+    gt_chars = get_chars(df, text_column="ground_truth")
 
-        special_chars = get_language_specific_chars(
-            base_model_language=args.base_model_language, gt_chars=gt_chars
-        )
-        general_scorer = SpecialCharacterF1("".join(special_chars))
-        df["special_char_F1"] = df.apply(
-            lambda row: general_scorer(
-                transcription=row.transcription, ground_truth=row.ground_truth
-            ),
-            axis=1,
-        )
-        collection_level_scores["special_char_F1"] = df.special_char_F1.mean()
-        for char in special_chars:
-            char_scorer = SpecialCharacterF1(char)
-            collection_level_scores[char] = {
-                "F1": df.apply(
-                    lambda row: char_scorer(
-                        transcription=row.transcription, ground_truth=row.ground_truth
-                    ),
-                    axis=1,
-                ).mean()
-            }
+    special_chars = get_language_specific_chars(
+        base_model_language=args.base_model_language, gt_chars=gt_chars
+    )
+    general_scorer = SpecialCharacterF1("".join(special_chars))
+    df["special_char_F1"] = df.apply(
+        lambda row: general_scorer(transcription=row.transcription, ground_truth=row.ground_truth),
+        axis=1,
+    )
+    collection_level_scores["special_char_F1"] = df.special_char_F1.mean()
+    for char in special_chars:
+        char_scorer = SpecialCharacterF1(char)
+        collection_level_scores[char] = {
+            "F1": df.apply(
+                lambda row: char_scorer(
+                    transcription=row.transcription, ground_truth=row.ground_truth
+                ),
+                axis=1,
+            ).mean()
+        }
 
     df.to_csv(output_dir / "row_level.csv", index=False)
 

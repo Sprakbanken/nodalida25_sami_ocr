@@ -2,7 +2,8 @@
 name = "samisk-ocr"
 version = "1.0.0"
 authors = [
-    {name = "Tita Enstad", email = "tita.enstad@nb.no"}
+    {name = "Tita Enstad", email = "tita.enstad@nb.no"},
+    {name = "Marie Roald", email = "marie.roald@nb.no"}
 ]
 
 requires-python = ">=3.11"
