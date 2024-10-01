@@ -153,6 +153,7 @@ class MultipleEvaluatorsCallback(TrainerCallback):
         key_prefix: str,
         artifact_path: Path,
         batch_size: int = 8,
+        unique_identifiers: Sequence[str] = ("urn", "page", "line"),
     ):
         self.evaluators = evaluators
         self.processor = processor
@@ -162,6 +163,7 @@ class MultipleEvaluatorsCallback(TrainerCallback):
         self.key_prefix = key_prefix
         self.batch_size = batch_size
         self.artifact_path = artifact_path
+        self.unique_identifiers = unique_identifiers
 
     def on_step_end(
         self,
@@ -188,9 +190,8 @@ class MultipleEvaluatorsCallback(TrainerCallback):
             {
                 "predictions": pred_texts,
                 "true": self.validation_data["text"],
-                "urn": self.validation_data["urn"],
-                "page": self.validation_data["page"],
-                "line": self.validation_data["line"],
+            } | {
+                identifier: self.validation_data[identifier] for identifier in self.unique_identifiers
             },
             self.artifact_path / f"{state.global_step:08d}.json",
         )
