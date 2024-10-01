@@ -1,20 +1,21 @@
 # Samisk OCR
-
 Dette repoet inneholder modeller trent på samisk OCR.
-Foreløpig er det kun tesseractmodeller her.
-
-Se dokumentet [tesseract howto](tesseract_howto.md) for hvordan du kan bruke (og trene!) disse modellene
 
 ## Treningsdata
 Vi har transkribert vår egen data, som er en blanding av flere forskjellige samiske språk (les mer [her](https://bibno-my.sharepoint.com/:w:/r/personal/marie_rosok_nb_no/Documents/Chatfiler%20for%20Microsoft%20Teams/SamiskOCR-notat.docx?d=wc077d3c74c4a4bb8ab16a9a4dcb5b45d&csf=1&web=1&e=7ZvMmv))
 
-Vi har også brukt dataen som Divvun & Giellatekno har på sin [github](https://github.com/divvungiellatekno/tesstrain/tree/main/training-data), som er nordsamisk data (sme).
-
-I tillegg har vi automatisk transkribert side 30 fra en rekke samiske bøker med en modelle vi har trent i transkribus. Dette for å få litt volum på datamengden, om enn noe lavere kvalitet.
+I tillegg har vi automatisk transkribert side 30 fra en rekke samiske bøker med en modell vi har trent i transkribus. Dette for å få litt volum på datamengden, om enn noe lavere kvalitet.
 
 ## Modeller
+
+### Tesseract 
 Modellene ligger i [tesseract_models](tesseract_models)
 Les mer om modellene i [README-fila](tesseract_models/README.md)
+
+Se dokumentet [tesseract howto](tesseract_howto.md) for hvordan du kan bruke (og trene!) disse modellene
+
+### TrOCR
+Modellene ligger på [Språkbankens sider på huggingface](https://huggingface.co/Sprakbanken)
 
 ## Resultater
 TBA
@@ -45,13 +46,3 @@ eller, med pdm
 pdm run python -m <skriptnavn>
 ```
 Legg til `--help` for å få mer informasjon om argumenter
-
-[transkribus_export_to_line_data](src/samisk_ocr/transkribus_export_to_line_data.py) tar en transkribus-export med bilder og transkripsjoner og gjør det om til bildefiler og tekstfiler på linjenivå (brukes til trening)
-
-[tesseract_transcribe](src/samisk_ocr/tesseract_transcribe.py) transkribere alle bildene i en mappe med en valgfri tesseract-modell og skriver resultatene i en .csv-fil
-
-[transkribus_export_to_prediction_file](src/samisk_ocr/transkribus_export_to_prediction_file.py) tar en transkribus-export med bilder og transkripsjoner og lager en fil med samme struktur som tesseract transcribe
-
-[evaluate_predictions](src/samisk_ocr/evaluate_predictions.py) tar inn en .csv-fil (output fra de to over) og regner ut WER og CER på samling, side og linjenivå
-
-[find_bad_boxes](src/samisk_ocr/find_bad_boxes.py) er en hjelpefunksjon for å finne tilfeller der boksene
