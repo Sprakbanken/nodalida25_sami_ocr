@@ -8,7 +8,7 @@ from samisk_ocr.utils import setup_logging
 logger = logging.getLogger(__name__)
 
 
-def find_img_file(img_dir: Path, img_stem: str, suffixes=[".jpg", ".jpeg", ".tif", ".png"]) -> Path:
+def find_img_file(img_dir: Path, img_stem: str, suffixes=(".jpg", ".jpeg", ".tif", ".png")) -> Path:
     for suffix in suffixes:
         img = img_dir / f"{img_stem}{suffix}"
         if img.exists():
