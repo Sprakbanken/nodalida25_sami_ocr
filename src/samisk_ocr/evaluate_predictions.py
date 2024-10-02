@@ -6,10 +6,10 @@ from string import punctuation, whitespace
 
 import pandas as pd
 
-from samisk_ocr.map_transkribus_lines_to_gt_lines import (
+from samisk_ocr.metrics import SpecialCharacterF1, compute_cer, compute_wer
+from samisk_ocr.transkribus.map_transkribus_lines_to_gt_lines import (
     map_transkribus_image_lines_to_gt_image_lines,
 )
-from samisk_ocr.metrics import SpecialCharacterF1, compute_cer, compute_wer
 from samisk_ocr.utils import setup_logging
 from samisk_ocr.write_characters import get_chars
 
@@ -97,13 +97,14 @@ if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
     setup_logging(source_script="evaluate_predictions", log_level=args.log_level)
+    logger.info(args)
 
     df = pd.read_csv(args.predictions)
     df["transcription"] = df.transcription.apply(str)
 
     if args.map_transkribus:
         df["image"] = map_transkribus_image_lines_to_gt_image_lines(
-            transkribus_df=df, gt_image_dir=args.gt_transcriptions
+            transkribus_df=df, gt_image_dir=args.dataset / args.split
         )
 
     gt_df = pd.read_csv(args.dataset / args.split / "_metadata.csv")
