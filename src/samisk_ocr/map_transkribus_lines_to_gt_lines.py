@@ -1,6 +1,8 @@
-import pandas as pd
-from pathlib import Path
 from functools import partial
+from pathlib import Path
+
+import pandas as pd
+
 from samisk_ocr.utils import Bbox, image_stem_to_urn_line_bbox
 
 
@@ -59,9 +61,7 @@ def map_transkribus_image_lines_to_gt_image_lines(
     assert len(gt_df) == len(transkribus_df)
 
     transkribus_image_stems = transkribus_df.image.apply(lambda x: Path(x).stem)
-    urns, lines, bboxes = zip(
-        *transkribus_image_stems.apply(image_stem_to_urn_line_bbox)
-    )
+    urns, lines, bboxes = zip(*transkribus_image_stems.apply(image_stem_to_urn_line_bbox))
     transkribus_df["urn"] = urns
     transkribus_df["line"] = lines
     transkribus_df["bbox"] = bboxes
@@ -93,14 +93,12 @@ def map_transkribus_image_lines_to_gt_image_lines(
             overlaps = bbox_differs_gt_lines.bbox.apply(
                 partial(calculate_overlap_area, bbox2=transk_tup.bbox)
             )
-            transkribus_df_.at[transk_tup.Index, "gt_image"] = (
-                bbox_differs_gt_lines.image[overlaps.argmax()]
-            )
+            transkribus_df_.at[transk_tup.Index, "gt_image"] = bbox_differs_gt_lines.image[
+                overlaps.argmax()
+            ]
 
         assert len(set(transkribus_df_.gt_image)) == len(transkribus_df_)
         dfs.append(transkribus_df_)
 
     map_df = pd.concat(dfs)
-    return transkribus_df.merge(
-        map_df, left_on="image", right_on="transkribus_image"
-    ).gt_image
+    return transkribus_df.merge(map_df, left_on="image", right_on="transkribus_image").gt_image

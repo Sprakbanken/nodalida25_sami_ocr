@@ -2,7 +2,8 @@
 name = "samisk-ocr"
 version = "1.0.0"
 authors = [
-    {name = "Tita Enstad", email = "tita.enstad@nb.no"}
+    {name = "Tita Enstad", email = "tita.enstad@nb.no"},
+    {name = "Marie Roald", email = "marie.roald@nb.no"}
 ]
 
 requires-python = ">=3.11"
@@ -21,12 +22,15 @@ dependencies = [
     "datasets>=2.21.0",
     "nb-tokenizer>=0.1.0",
     "wordcloud>=1.9.3",
+    "dash>=2.17.1",
     "transformers[torch]>=4.44.1",
     "mlflow>=2.15.1",
     "evaluate>=0.4.2",
     "pydantic-settings>=2.4.0",
     "ipywidgets>=8.1.5",
     "jupyter-collaboration>=2.1.2",
+    "statsmodels>=0.14.2",
+    "kaleido==0.2.1",
 ]
 
 [build-system]
@@ -40,6 +44,7 @@ distribution = true
 dev = [
     "ruff>=0.5.1",
     "hypothesis>=6.112.1",
+    "pytest>=8.3.3",
 ]
 
 [tool.ruff]
@@ -51,3 +56,8 @@ select = ["I", "TCH"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["samisk_ocr"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests"
+]

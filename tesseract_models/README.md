@@ -1,55 +1,31 @@
-# Forklaring av modellene
-
-## Modellnavn
-smx er en påfunnet iso-kode for samlingen av flere samiske språk.
+# Forklaring av tesseract-modellene
 
 ## Data
-Først hadde vi originaldataen
-Så fant vi divvun&giellatekno sin data
-Så fikk vi en avis
-Og masse automatisk transkriberte side30 fra diverse samiske tekster
+- gt_smi: Manuelt annotert og korrigert samisk data
+- gt_nor: Manuelt annotert og korrigert norsk data (gt_pix)
+- auto_smi: Automatisk transkribert* data (side 30 fra masse forskjellige samiske bøker)
+- synth_smi: Syntetiske bilder av ekte samisk tekst
+
+*Med en modell vi har trent i transkribus
 
 ### Dataprosessering
 - a) fjerne linjene hvor bredden er mindre enn høyden
-- b) rotere linjene hvor bredden er mindre enn halvparten av høyden
-- c) fjerne linjene hvor transkripsjonen er kortere enn x tegn
-- d) erstatte forekomster av em-dash med en-dash
+- b) fjerne linjene hvor transkripsjonene er kortere enn 5 tegn
+
+a) gjøres for all data, b) gjøres kun for auto_smi
 
 ## Modeller
-nor_smx_200.traineddata
-- videretrent fra nor.traineddata fra tessdata_best
-- trent på originaldataen med avis + alle side30-dataene
-- trent i 200 epoker
 
-nor_smx_201.traineddata
-- videretrent fra nor_smx_200.traineddata
-- trent på originaldataen + dataprosessering a, b, c (x=5) og d
-- trent i 1 epoke
+### Modeller til artikkelen
+- smi: bare trent på den manuelt annoterte samiske dataen
+- nor_smi: norsk tesseractmodell videretrent på den manuelt annoterte samiske dataen (gt_smi)
+- nor_smi_nor: norsk tesseractmodell videretrent på den manuelt annoterte dataen (gt_smi + gt_nor)
+- nor_smi_smi: norsk tesseractmodell videretrent på den samiske dataen (gt_smi, auto_smi)
+- nor_all:  norsk tesseractmodell videretrent på all dataen (gt_smi, auto_smi, gt_nor)
 
-nor_smx_205.traineddata
-- videretrent fra nor_smx_205.traineddata
-- med 10x lavere learning rate enn default (0.0002)
-- 5 epoker, men samme data
+### Basemodell-eksperiment
+Trent én runde med tesseract på forskjellige basemodeller med vår data.
 
-nor_smx_206.traineddata
-- videretrent fra nor_smx_205.traineddata
-- trent på originaldataen + dataprosessering a, b, c (x=5) og d
-- trent i 1 epoke
-
-nor_smx_train_rotate_remove.traineddata
-- trent på originaldataen med avis, men etter dataprossesseringssteg a og b
-- 100 epoker
-
-
-
-## Modellnavn i gamle_modeller
-Modellene er navngitt etter eventuelle basemodeller og antall iterasjoner de er trent.
-Eksempel:
-```
-est_smx_20000.traineddata
-```
-est: modellen er basert på den estiske basemodellen som finnes i [tessdata_best-repoet](https://github.com/tesseract-ocr/tessdata_best).
-smx: den er finetuned på vårt transkriberte datasett
-20000: den er trent i 20 000 iterasjoner
-
-Modellene i `gamle_modeller/` er trent på originaldataen uten avis hvis de starter med smx_, og originaldataen uten avis + divvun&giellatekno sin data hvis de starter med smx2_
+- nor_smi1: CER: 5.03% WER: 11.97%
+- est_smi1: CER: 5.15% WER: 12.29%
+- fin_smi1: CER: 5.94% WER: 16.15%

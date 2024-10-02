@@ -7,7 +7,6 @@ data/*
 # Other ignores
 venv_samisk
 tesstrain
-tesseract
 output/
 example_image.out.txt
 tesseract_models/divvungiellatekno
@@ -23,3 +22,6 @@ kladd.ipynb
 .ruff_cache
 
 logs
+
+dataset.zip
+samisk_ocr_new_split
