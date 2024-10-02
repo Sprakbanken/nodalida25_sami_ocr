@@ -92,6 +92,7 @@ if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
     setup_logging(source_script="evaluate_predictions", log_level=args.log_level)
+    logger.info(args)
 
     df = pd.read_csv(args.predictions)
     df["transcription"] = df.transcription.apply(str)
