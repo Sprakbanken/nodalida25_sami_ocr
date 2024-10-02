@@ -40,7 +40,7 @@ def test_filter_min_len(row, min_len):
 @given(row=dataset_rows(), filter_width=st.booleans())
 def test_filter_width_height_ratio(row, filter_width):
     """Rows with width <= min_with_height_ratio * height are filtered away, but others are kept."""
-    assert (row["width"] >= row["height"] or not filter_width) == should_include_dataset_row(
+    assert (row["width"] > row["height"] or not filter_width) == should_include_dataset_row(
         row,
         min_len=0,
         filter_width=filter_width,
