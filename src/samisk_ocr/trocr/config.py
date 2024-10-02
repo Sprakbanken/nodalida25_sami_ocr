@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 
 class Config(BaseSettings):
     DATA_PATH: Path | None = None
+    SYNTH_DATA_PATH: Path | None = None
     MLFLOW_HOST: str = "localhost"
     MLFLOW_PORT: int = 5431
     MLFLOW_PROTOCOL: str = "http"

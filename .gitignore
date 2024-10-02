@@ -1,8 +1,14 @@
+# Ignore the data directory, but don't ignore the "common" directory inside it
+# https://stackoverflow.com/questions/5533050/gitignore-exclude-folder-but-include-specific-subfolder
+!data/
+data/*
+!data/common/
+
+# Other ignores
 venv_samisk
 tesstrain
 output/
 example_image.out.txt
-data/
 tesseract_models/divvungiellatekno
 kladd.ipynb
 
