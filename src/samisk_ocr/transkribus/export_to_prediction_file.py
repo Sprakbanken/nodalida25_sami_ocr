@@ -5,6 +5,9 @@ from pathlib import Path
 import pandas as pd
 from ordbilder.annotations import Annotation, get_annotation_information
 
+from samisk_ocr.transkribus.map_transkribus_lines_to_gt_lines import (
+    map_transkribus_image_lines_to_gt_image_lines,
+)
 from samisk_ocr.utils import setup_logging
 
 pil_logger = logging.getLogger("PIL")
@@ -56,8 +59,15 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "input_dir",
         type=Path,
-        help="The directory containing image files and txt/ directory with transcription files",
+        help="The directory containing transkribus transcriptions (alto_xml files if line-level or txt/ directory if page-level)",
     )
+    parser.add_argument(
+        "--dataset",
+        help="Path to local dataset",
+        type=Path,
+        default=Path("data/samisk_ocr_dataset/"),
+    )
+    parser.add_argument("--split", default="val", help="Dataset split to transcribe")
     parser.add_argument(
         "--output_dir",
         type=Path,
@@ -65,9 +75,9 @@ def get_parser() -> ArgumentParser:
         default="output/predictions",
     )
     parser.add_argument(
-        "--line",
+        "--page",
         action="store_true",
-        help="If flagged, look for line level transcriptions in same directory as images",
+        help="If flagged, will treat images as page level",
     )
     parser.add_argument(
         "--log_level",
@@ -83,21 +93,33 @@ if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
     setup_logging(source_script="transkribus_export_to_prediction_file", log_level=args.log_level)
-    logger.info(vars(args))
+    logger.info(args)
 
-    if args.line:
-        output_dir = args.output_dir / "line_level"
-        output_dir.mkdir(exist_ok=True, parents=True)
-        df = get_line_transcriptions(args.input_dir)
-    else:
-        output_dir = args.output_dir / "page_level"
-        output_dir.mkdir(exist_ok=True, parents=True)
-
+    if args.page:
         images = get_images_in_dir(args.input_dir)
         df = pd.DataFrame({"image": images})
         df["transcription"] = read_text_files(df=df, text_dir=args.input_dir / "txt")
 
-    df["model_name"] = [args.model_name] * len(df)
-    output_csv = output_dir / f"{args.model_name}_predictions.csv"
+        output_dir = args.output_dir / "page_level"
+        output_dir.mkdir(exist_ok=True, parents=True)
+    else:
+        df = get_line_transcriptions(args.input_dir)
+        output_dir = args.output_dir / "line_level"
+        output_dir.mkdir(exist_ok=True, parents=True)
+
+        df["gt_image"] = map_transkribus_image_lines_to_gt_image_lines(
+            df, gt_image_dir=args.dataset / args.split
+        )
+        dataset_df = pd.read_csv(args.dataset / args.split / "_metadata.csv")
+        df = dataset_df.merge(
+            df[["transcription", "gt_image"]],
+            left_on="file_name",
+            right_on="gt_image",
+            validate="1:1",
+        )
+        assert len(df) == len(dataset_df)
+
+    output_csv = output_dir / f"{args.model_name}_{args.split}.csv"
     df.to_csv(output_csv, index=False)
+
     logger.info(f"Wrote predicted transcriptions to {output_csv}")
