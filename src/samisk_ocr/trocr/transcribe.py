@@ -1,15 +1,11 @@
 import logging
 from argparse import ArgumentParser
+from functools import partial
 from pathlib import Path
 
 import pandas as pd
-from PIL import Image
-from tqdm import tqdm
+import torch
 from datasets import load_dataset
-import torch
-from functools import partial
-
-import torch
 from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 
 from samisk_ocr.utils import setup_logging
@@ -85,16 +81,14 @@ if __name__ == "__main__":
         help="Path to local dataset",
         default=Path("data/samisk_ocr_dataset/"),
     )
-    parser.add_argument("--split", default="val", help="Dataset split to transcripe")
+    parser.add_argument("--split", default="val", help="Dataset split to transcribe")
     parser.add_argument(
         "--output_dir",
         type=Path,
         help="The output directory to store predicted transcriptions",
         default=Path("output/predictions/"),
     )
-    parser.add_argument(
-        "--batch_size", type=int, help="Batch size when transcribing", default=16
-    )
+    parser.add_argument("--batch_size", type=int, help="Batch size when transcribing", default=16)
     parser.add_argument(
         "--log_level",
         type=str,
@@ -116,7 +110,7 @@ if __name__ == "__main__":
     output_dir = args.output_dir / "line_level"
 
     output_dir.mkdir(exist_ok=True, parents=True)
-    output_csv = output_dir / f"{args.model_name}_{args.split}.csv"
+    output_csv = output_dir / f"{Path(args.model_name).name}_{args.split}.csv"
     df.to_csv(output_csv, index=False)
 
     logger.info(f"Wrote predicted transcriptions to {output_csv}")
