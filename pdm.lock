@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:9e999e9017cb0e973e1390ed6c8482631ba896bb57bb95d54fea902124f1951b"
+content_hash = "sha256:49bf6598ebc047f3a7a1b1f203bdf10ca310e6296e59a9131664e6610341e5f7"
 
 [[metadata.targets]]
 requires_python = ">=3.11"
@@ -276,7 +276,8 @@ name = "attrs"
 version = "24.2.0"
 requires_python = ">=3.7"
 summary = "Classes Without Boilerplate"
-groups = ["default"]
+groups = ["default", "dev"]
+marker = "python_version >= \"3.12\""
 dependencies = [
     "importlib-metadata; python_version < \"3.8\"",
 ]
@@ -491,8 +492,8 @@ name = "colorama"
 version = "0.4.6"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 summary = "Cross-platform colored terminal text."
-groups = ["default", "dev"]
-marker = "platform_system == \"Windows\" or sys_platform == \"win32\""
+groups = ["default"]
+marker = "(platform_system == \"Windows\" or sys_platform == \"win32\") and python_version >= \"3.12\""
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
@@ -1159,6 +1160,23 @@ files = [
 ]
 
 [[package]]
+name = "hypothesis"
+version = "6.112.1"
+requires_python = ">=3.8"
+summary = "A library for property-based testing"
+groups = ["dev"]
+marker = "python_version >= \"3.12\""
+dependencies = [
+    "attrs>=22.2.0",
+    "exceptiongroup>=1.0.0; python_version < \"3.11\"",
+    "sortedcontainers<3.0.0,>=2.1.0",
+]
+files = [
+    {file = "hypothesis-6.112.1-py3-none-any.whl", hash = "sha256:93631b1498b20d2c205ed304cbd41d50e9c069d78a9c773c1324ca094c5e30ce"},
+    {file = "hypothesis-6.112.1.tar.gz", hash = "sha256:b070d7a1bb9bd84706c31885c9aeddc138e2b36a9c112a91984f49501c567856"},
+]
+
+[[package]]
 name = "identify"
 version = "2.6.0"
 requires_python = ">=3.8"
@@ -1470,6 +1488,27 @@ files = [
 ]
 
 [[package]]
+name = "jupyter-collaboration"
+version = "2.1.2"
+requires_python = ">=3.8"
+summary = "JupyterLab Extension enabling Real-Time Collaboration"
+groups = ["default"]
+marker = "python_version >= \"3.12\""
+dependencies = [
+    "jsonschema>=4.18.0",
+    "jupyter-events>=0.10.0",
+    "jupyter-server-fileid<1,>=0.7.0",
+    "jupyter-server<3.0.0,>=2.0.0",
+    "jupyter-ydoc<3.0.0,>=2.0.0",
+    "pycrdt",
+    "pycrdt-websocket<0.15.0,>=0.14.0",
+]
+files = [
+    {file = "jupyter_collaboration-2.1.2-py3-none-any.whl", hash = "sha256:5377afae40e08c3d422f2f400427633ebb0d878fe3e18a3412a4d35e63927380"},
+    {file = "jupyter_collaboration-2.1.2.tar.gz", hash = "sha256:b8b6cd633b336922e753855c683af928171137e5e6fc1e3bd6cf96f6a2626ec9"},
+]
+
+[[package]]
 name = "jupyter-console"
 version = "6.6.3"
 requires_python = ">=3.7"
@@ -1574,6 +1613,22 @@ files = [
 ]
 
 [[package]]
+name = "jupyter-server-fileid"
+version = "0.9.3"
+requires_python = ">=3.7"
+summary = "Jupyter Server extension providing an implementation of the File ID service."
+groups = ["default"]
+marker = "python_version >= \"3.12\""
+dependencies = [
+    "jupyter-events>=0.5.0",
+    "jupyter-server<3,>=1.15",
+]
+files = [
+    {file = "jupyter_server_fileid-0.9.3-py3-none-any.whl", hash = "sha256:f73c01c19f90005d3fff93607b91b4955ba4e1dccdde9bfe8026646f94053791"},
+    {file = "jupyter_server_fileid-0.9.3.tar.gz", hash = "sha256:521608bb87f606a8637fcbdce2f3d24a8b3cc89d2eef61751cb40e468d4e54be"},
+]
+
+[[package]]
 name = "jupyter-server-terminals"
 version = "0.5.3"
 requires_python = ">=3.8"
@@ -1586,6 +1641,22 @@ dependencies = [
 files = [
     {file = "jupyter_server_terminals-0.5.3-py3-none-any.whl", hash = "sha256:41ee0d7dc0ebf2809c668e0fc726dfaf258fcd3e769568996ca731b6194ae9aa"},
     {file = "jupyter_server_terminals-0.5.3.tar.gz", hash = "sha256:5ae0295167220e9ace0edcfdb212afd2b01ee8d179fe6f23c899590e9b8a5269"},
+]
+
+[[package]]
+name = "jupyter-ydoc"
+version = "2.1.1"
+requires_python = ">=3.7"
+summary = "Document structures for collaborative editing using Ypy"
+groups = ["default"]
+marker = "python_version >= \"3.12\""
+dependencies = [
+    "importlib-metadata>=3.6; python_version < \"3.10\"",
+    "pycrdt<0.10.0,>=0.9.0",
+]
+files = [
+    {file = "jupyter_ydoc-2.1.1-py3-none-any.whl", hash = "sha256:4f0aa4e9624ab9328e6ebcc26df0a0a42017cf790267e52fbe38fb163f96d6b4"},
+    {file = "jupyter_ydoc-2.1.1.tar.gz", hash = "sha256:1dcbf13861b3678000d69af4ef38b49e3a12f8081ba851c680393c2e18bc4b84"},
 ]
 
 [[package]]
@@ -2780,7 +2851,7 @@ name = "ptyprocess"
 version = "0.7.0"
 summary = "Run a subprocess in a pseudo terminal"
 groups = ["default"]
-marker = "sys_platform != \"win32\" and sys_platform != \"emscripten\" or os_name != \"nt\""
+marker = "(sys_platform != \"win32\" and sys_platform != \"emscripten\" or os_name != \"nt\") and python_version >= \"3.12\""
 files = [
     {file = "ptyprocess-0.7.0-py2.py3-none-any.whl", hash = "sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35"},
     {file = "ptyprocess-0.7.0.tar.gz", hash = "sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220"},
@@ -2857,6 +2928,46 @@ groups = ["default"]
 files = [
     {file = "pycparser-2.22-py3-none-any.whl", hash = "sha256:c3702b6d3dd8c7abc1afa565d7e63d53a1d0bd86cdc24edd75470f4de499cfcc"},
     {file = "pycparser-2.22.tar.gz", hash = "sha256:491c8be9c040f5390f5bf44a5b07752bd07f56edf992381b05c701439eec10f6"},
+]
+
+[[package]]
+name = "pycrdt"
+version = "0.9.11"
+requires_python = ">=3.8"
+summary = "Python bindings for Yrs"
+groups = ["default"]
+marker = "python_version >= \"3.12\""
+dependencies = [
+    "anyio<5.0.0,>=4.4.0",
+]
+files = [
+    {file = "pycrdt-0.9.11-cp312-cp312-macosx_10_12_x86_64.macosx_11_0_arm64.macosx_10_12_universal2.whl", hash = "sha256:24c2a719d703f0d57c8c0c2999dcae4ca9768df948d3489be3e87e209484b203"},
+    {file = "pycrdt-0.9.11-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:604172f65d02a1846092128ddf2bfb294cf42f7cf1e3501377e9faff2dfe450e"},
+    {file = "pycrdt-0.9.11-cp312-cp312-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:965268eb0448d16629b5b51ec71346b491e7f8e0840832ed90092bd4a18fdb75"},
+    {file = "pycrdt-0.9.11-cp312-cp312-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:fec6a494f14c78c2fc8f645872a66517d0fa6a1d538addcdaa2865bcf2af5e2a"},
+    {file = "pycrdt-0.9.11-cp312-cp312-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:8189629d2191c1c8053bc6e1852edcb29b6cde87897cb1b295910e385346cbba"},
+    {file = "pycrdt-0.9.11-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bc6cefccd78ed2327b5a58424b573147472d234e11b8252814cae7071613cdd0"},
+    {file = "pycrdt-0.9.11-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:f948376fea046f9a730f968f778e3c933c098baf0030170f7c2cbba752fd33cd"},
+    {file = "pycrdt-0.9.11-cp312-none-win32.whl", hash = "sha256:e6c3007695e3086a36e21f71c54eea45f684a9018244fc75f28606c6fff424ce"},
+    {file = "pycrdt-0.9.11-cp312-none-win_amd64.whl", hash = "sha256:688937ff0be6743d73f35ed7fc5789647b4657949d18a9e03b31d8bb88e52a24"},
+    {file = "pycrdt-0.9.11.tar.gz", hash = "sha256:544cf5ff97615d8b06ae38b11d7788e7612fc341c997a170d57695beead4249b"},
+]
+
+[[package]]
+name = "pycrdt-websocket"
+version = "0.14.2"
+requires_python = ">=3.8"
+summary = "WebSocket connector for pycrdt"
+groups = ["default"]
+marker = "python_version >= \"3.12\""
+dependencies = [
+    "anyio<5,>=3.6.2",
+    "pycrdt<0.10.0,>=0.9.0",
+    "sqlite-anyio<0.3.0,>=0.2.3",
+]
+files = [
+    {file = "pycrdt_websocket-0.14.2-py3-none-any.whl", hash = "sha256:63466de53716a9cc4625a7ef5afd884e51cc011921473c2f4aadc49734986584"},
+    {file = "pycrdt_websocket-0.14.2.tar.gz", hash = "sha256:72b621d2c9fcd8829d6640eaa554739884febce0cdc20a19cb2f013ef73cca3f"},
 ]
 
 [[package]]
@@ -3414,6 +3525,7 @@ version = "0.6.4"
 requires_python = ">=3.7"
 summary = "An extremely fast Python linter and code formatter, written in Rust."
 groups = ["default", "dev"]
+marker = "python_version >= \"3.12\""
 files = [
     {file = "ruff-0.6.4-py3-none-linux_armv6l.whl", hash = "sha256:c4b153fc152af51855458e79e835fb6b933032921756cec9af7d0ba2aa01a258"},
     {file = "ruff-0.6.4-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:bedff9e4f004dad5f7f76a9d39c4ca98af526c9b1695068198b3bda8c085ef60"},
@@ -3598,6 +3710,17 @@ files = [
 ]
 
 [[package]]
+name = "sortedcontainers"
+version = "2.4.0"
+summary = "Sorted Containers -- Sorted List, Sorted Dict, Sorted Set"
+groups = ["dev"]
+marker = "python_version >= \"3.12\""
+files = [
+    {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
+    {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
+]
+
+[[package]]
 name = "soupsieve"
 version = "2.6"
 requires_python = ">=3.8"
@@ -3638,6 +3761,21 @@ files = [
     {file = "SQLAlchemy-2.0.34-cp312-cp312-win_amd64.whl", hash = "sha256:707c8f44931a4facd4149b52b75b80544a8d824162602b8cd2fe788207307f9a"},
     {file = "SQLAlchemy-2.0.34-py3-none-any.whl", hash = "sha256:7286c353ee6475613d8beff83167374006c6b3e3f0e6491bfe8ca610eb1dec0f"},
     {file = "sqlalchemy-2.0.34.tar.gz", hash = "sha256:10d8f36990dd929690666679b0f42235c159a7051534adb135728ee52828dd22"},
+]
+
+[[package]]
+name = "sqlite-anyio"
+version = "0.2.3"
+requires_python = ">=3.8"
+summary = "Asynchronous client for SQLite using AnyIO"
+groups = ["default"]
+marker = "python_version >= \"3.12\""
+dependencies = [
+    "anyio<5.0,>=4.0",
+]
+files = [
+    {file = "sqlite_anyio-0.2.3-py3-none-any.whl", hash = "sha256:aa10fa23b7e2ce9c792376630572e1e5837e6f6a9892d90c9ad57419daf4bc01"},
+    {file = "sqlite_anyio-0.2.3.tar.gz", hash = "sha256:12a8b0ececaa63d70d5cc5f91edbd932fc1eca9da70ebce2b31d3a199767b3d3"},
 ]
 
 [[package]]

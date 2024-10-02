@@ -28,6 +28,7 @@ dependencies = [
     "evaluate>=0.4.2",
     "pydantic-settings>=2.4.0",
     "ipywidgets>=8.1.5",
+    "jupyter-collaboration>=2.1.2",
     "statsmodels>=0.14.2",
     "kaleido==0.2.1",
 ]
@@ -42,6 +43,7 @@ distribution = true
 [tool.pdm.dev-dependencies]
 dev = [
     "ruff>=0.5.1",
+    "hypothesis>=6.112.1",
     "pytest>=8.3.3",
 ]
 
