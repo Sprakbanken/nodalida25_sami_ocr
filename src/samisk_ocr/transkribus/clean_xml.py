@@ -18,10 +18,9 @@ def clean_alto_xml_tree(xml_tree: ET.ElementTree) -> ET.ElementTree:
         namespace = root.tag[: root.tag.index("}") + 1]
     string_tag = namespace + "String"
 
-    for elem in root.iter():
-        if elem.tag == string_tag:
-            content = elem.get("CONTENT", "")
-            elem.set("CONTENT", clean(content))
+    for elem in root.findall(f".//{string_tag}"):
+        content = elem.get("CONTENT", "")
+        elem.set("CONTENT", clean(content))
 
     return tree
 
