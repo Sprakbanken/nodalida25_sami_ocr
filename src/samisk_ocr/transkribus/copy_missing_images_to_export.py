@@ -13,7 +13,7 @@ def find_img_file(img_dir: Path, img_stem: str, suffixes=[".jpg", ".jpeg", ".tif
         img = img_dir / f"{img_stem}{suffix}"
         if img.exists():
             return img
-    logger.error("No image found with stem %s found in %s", (img_stem, img_dir))
+    logger.error("No image found with stem %s found in %s", img_stem, img_dir)
     exit(1)
 
 
