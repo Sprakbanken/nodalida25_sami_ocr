@@ -13,7 +13,7 @@ pil_logger.setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def get_images_in_dir(image_dir: Path, image_suffixes=[".tif", ".png", ".jpg"]):
+def get_images_in_dir(image_dir: Path, image_suffixes=(".tif", ".png", ".jpg")):
     return [e for suf in image_suffixes for e in image_dir.glob(f"*{suf}")]
 
 
