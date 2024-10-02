@@ -1,4 +1,5 @@
 import logging
+import random
 from functools import partial
 from math import ceil
 from pathlib import Path
@@ -35,13 +36,13 @@ logger = logging.getLogger(__name__)
 setup_logging(source_script=Path(__file__).stem, log_level="INFO")
 
 config = samisk_ocr.trocr.config.Config()
+print(config.mlflow_url)
 mlflow.set_tracking_uri(config.mlflow_url)
-mlflow.set_experiment("TrOCR trocr-base-printed finetuning")
+mlflow.set_experiment("TrOCR trocr-base-printed finetuning-synthetic")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load the datasets
-logger.info("Loading validation data")
 validation_set = preprocess_dataset(
     datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="validation"),
     min_len=1,
@@ -50,15 +51,11 @@ validation_set = preprocess_dataset(
     include_gt_pix=False,
     min_len_page_30=5,
 )
+synth_dataset = datasets.load_dataset("imagefolder", data_dir=config.SYNTH_DATA_PATH)
+logger.info("Loading validation data")
+synth_validation_set = synth_dataset["validation"].shuffle(seed=42).take(1000)
 logger.info("Loading training data")
-train_set = preprocess_dataset(
-    datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="train"),
-    min_len=1,
-    filter_width=True,
-    include_page_30=True,
-    include_gt_pix=True,
-    min_len_page_30=5,
-)
+train_set = synth_dataset["train"]
 logger.info("Data loaded")
 
 # Load the TrOCR processor and model
@@ -82,6 +79,9 @@ transform_data_partial = partial(
 )
 processed_train_set = train_set.with_transform(transform_data_partial, output_all_columns=True)
 processed_validation_set = validation_set.with_transform(
+    transform_data_partial, output_all_columns=True
+)
+processed_synth_validation_set = synth_validation_set.with_transform(
     transform_data_partial, output_all_columns=True
 )
 
@@ -138,8 +138,8 @@ with mlflow.start_run() as run:
     # Setup trainer args
     batch_size = 8
     steps_per_epoch = ceil(len(processed_train_set) / batch_size)
-    eval_steps = 2 * steps_per_epoch
-    batched_eval_frequency = steps_per_epoch // 2
+    eval_steps = steps_per_epoch // 10
+    batched_eval_frequency = eval_steps // 4
     training_args = Seq2SeqTrainingArguments(
         #
         # Training paramters
@@ -191,7 +191,17 @@ with mlflow.start_run() as run:
                 processed_validation_data=processed_validation_set,
                 frequency=eval_steps,
                 key_prefix="eval_",
-                artifact_path=config.MLFLOW_ARTIFACT_PREDICTIONS_DIR,
+                artifact_path=config.MLFLOW_ARTIFACT_PREDICTIONS_DIR / "real",
+            ),
+            MultipleEvaluatorsCallback(
+                evaluators=evaluators,
+                processor=processor,
+                validation_data=synth_validation_set,
+                processed_validation_data=processed_synth_validation_set,
+                frequency=eval_steps,
+                key_prefix="eval_synth_",
+                artifact_path=config.MLFLOW_ARTIFACT_PREDICTIONS_DIR / "synth",
+                unique_identifiers=("unique_id",)
             ),
             BatchedMultipleEvaluatorsCallback(
                 evaluators=evaluators,
@@ -203,6 +213,17 @@ with mlflow.start_run() as run:
                 ),
                 frequency=batched_eval_frequency,
                 key_prefix="batched_eval_",
+            ),
+            BatchedMultipleEvaluatorsCallback(
+                evaluators=evaluators,
+                processor=processor,
+                batch_sampler=DatasetSampler(
+                    dataset=synth_validation_set,
+                    processed_dataset=processed_synth_validation_set,
+                    batch_size=16,
+                ),
+                frequency=batched_eval_frequency,
+                key_prefix="batched_synth_eval_",
             ),
             BatchedMultipleEvaluatorsCallback(
                 evaluators=evaluators,
