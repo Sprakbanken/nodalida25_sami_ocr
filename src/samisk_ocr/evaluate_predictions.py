@@ -6,9 +6,6 @@ from string import punctuation, whitespace
 
 import pandas as pd
 
-from samisk_ocr.map_transkribus_lines_to_gt_lines import (
-    map_transkribus_image_lines_to_gt_image_lines,
-)
 from samisk_ocr.metrics import SpecialCharacterF1, compute_cer, compute_wer
 from samisk_ocr.utils import setup_logging
 from samisk_ocr.write_characters import get_chars
@@ -54,15 +51,6 @@ def get_parser() -> ArgumentParser:
         help=".csv file with predicted transcriptions",
     )
     parser.add_argument(
-        "--dataset", help="Path to dataset", default=Path("data/samisk_ocr_dataset")
-    )
-    parser.add_argument("--split", help="Dataset split to evaluate", default="val")
-    parser.add_argument(
-        "--model_name",
-        help="Name of model that produced transcriptions to evaluate",
-        required=True,
-    )
-    parser.add_argument(
         "--output_dir",
         type=Path,
         help="The output directory to store evaluation results",
@@ -74,14 +62,9 @@ def get_parser() -> ArgumentParser:
         help="Three-letter langcode for language for the base model (if any)",
     )
     parser.add_argument(
-        "--line",
+        "--page",
         action="store_true",
-        help="If flagged, will assume line level predictions (and page level if not flagged)",
-    )
-    parser.add_argument(
-        "--map_transkribus",
-        action="store_true",
-        help="If flagged, will map transkribus line bboxes to closest ground truth bboxes",
+        help="If flagged, will assume page level predictions (default is line level)",
     )
     parser.add_argument(
         "--log_level",
@@ -97,24 +80,19 @@ if __name__ == "__main__":
     parser = get_parser()
     args = parser.parse_args()
     setup_logging(source_script="evaluate_predictions", log_level=args.log_level)
+    logger.info(args)
 
     df = pd.read_csv(args.predictions)
     df["transcription"] = df.transcription.apply(str)
-
-    if args.map_transkribus:
-        df["image"] = map_transkribus_image_lines_to_gt_image_lines(
-            transkribus_df=df, gt_image_dir=args.gt_transcriptions
-        )
-
-    gt_df = pd.read_csv(args.dataset / args.split / "_metadata.csv")
-    gt_df["image"] = gt_df.file_name.apply(lambda x: Path(x).name)
-    df = df.merge(gt_df, on="image")
     df = df.rename(columns={"text": "ground_truth"})
 
-    if args.line:
-        output_dir = args.output_dir / "line_level" / args.model_name
+    model_name = args.predictions.name.rsplit("_", maxsplit=1)[0]
+
+    if args.page:
+        output_dir = args.output_dir / "page_level" / model_name
     else:
-        output_dir = args.output_dir / "page_level" / args.model_name
+        output_dir = args.output_dir / "line_level" / model_name
+
     output_dir.mkdir(parents=True)
 
     df["CER"] = df.apply(

@@ -20,6 +20,8 @@ import samisk_ocr.trocr
 from samisk_ocr.metrics import compute_cer, compute_wer
 from samisk_ocr.mlflow.callbacks import (
     BatchedMultipleEvaluatorsCallback,
+    ConcatCEREvaluator,
+    ConcatWEREvaluator,
     MetricSummaryEvaluator,
     MultipleEvaluatorsCallback,
     RandomImageSaverCallback,
@@ -42,18 +44,20 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 logger.info("Loading validation data")
 validation_set = preprocess_dataset(
     datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="validation"),
-    min_len=3,
-    min_with_height_ratio=2,
+    min_len=1,
+    filter_width=True,
     include_page_30=False,
     include_gt_pix=False,
+    min_len_page_30=5,
 )
 logger.info("Loading training data")
 train_set = preprocess_dataset(
     datasets.load_dataset("imagefolder", data_dir=config.DATA_PATH, split="train"),
-    min_len=3,
-    min_with_height_ratio=2,
-    include_page_30=False,
+    min_len=1,
+    filter_width=True,
+    include_page_30=True,
     include_gt_pix=True,
+    min_len_page_30=5,
 )
 logger.info("Data loaded")
 
@@ -109,6 +113,8 @@ evaluators = [
         MetricSummaryEvaluator(compute_wer, partial(np.percentile, q=q), f"{q}percentile_wer")
         for q in [95, 90, 75, 25]
     ],
+    ConcatCEREvaluator(),
+    ConcatWEREvaluator(),
     WorstTranscriptionImageEvaluator(
         key="worst_cer_images", artifact_dir=config.MLFLOW_ARTIFACT_IMAGE_DIR
     ),
@@ -132,17 +138,16 @@ with mlflow.start_run() as run:
     # Setup trainer args
     batch_size = 8
     steps_per_epoch = ceil(len(processed_train_set) / batch_size)
-    eval_steps = 5 * steps_per_epoch
+    eval_steps = 2 * steps_per_epoch
     batched_eval_frequency = steps_per_epoch // 2
     training_args = Seq2SeqTrainingArguments(
         #
         # Training paramters
         fp16=False,
-        learning_rate=1e-5,
-        num_train_epochs=200,
+        learning_rate=1e-6,
+        num_train_epochs=100,
         per_device_train_batch_size=8,
         remove_unused_columns=False,
-        lr_scheduler_type=transformers.SchedulerType.COSINE_WITH_RESTARTS,
         #
         # Evaluation parameters
         eval_strategy="steps",
