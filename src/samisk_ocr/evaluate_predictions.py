@@ -64,7 +64,7 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--page",
         action="store_true",
-        help="If flagged, will assume line page predictions (and line level if not flagged)",
+        help="If flagged, will assume page level predictions (default is line level)",
     )
     parser.add_argument(
         "--log_level",
