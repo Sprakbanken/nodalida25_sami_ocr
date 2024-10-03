@@ -6,11 +6,10 @@ import logging
 from argparse import ArgumentParser
 from pathlib import Path
 from shutil import copy2
-
-import pandas as pd
+from typing import TypedDict
 
 from samisk_ocr.metrics import compute_cer, compute_wer
-from samisk_ocr.tesseract.transcribe import transcribe
+from samisk_ocr.tesseract.transcribe import transcribe_dataset
 from samisk_ocr.utils import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -28,23 +27,23 @@ def remove_models_from_tessdata(model_dir: Path, tessdata_dir: Path):
             tessdata_model.unlink()
 
 
-def transcribe_with_model(model_name: str, image_dir: Path, gt_df: pd.DataFrame, output_file: Path):
+def transcribe_and_eval(model_name: str, dataset_path: Path, split: str, output_file: Path):
     if output_file.exists():
         return
     try:
-        transcription_df = transcribe(model_name=model_name, image_dir=image_dir, line_level=True)
+        df = transcribe_dataset(
+            model_name=model_name, dataset=dataset_path, split=split, line_level=True
+        )
     except Exception as ex:
         logger.warning(
-            f"Encountered exception when running model {model_name} on image dir {image_dir.name}"
+            f"Encountered exception when running model {model_name} on dataset {dataset_path.name}/{split}"
         )
         return
-    df = transcription_df.merge(gt_df, on="image")
+
     WER_concat = compute_wer(
-        transcription=" ".join(df.transcription), ground_truth=" ".join(df.ground_truth)
+        transcription=" ".join(df.transcription), ground_truth=" ".join(df.text)
     )
-    CER_concat = compute_cer(
-        transcription="".join(df.transcription), ground_truth="".join(df.ground_truth)
-    )
+    CER_concat = compute_cer(transcription="".join(df.transcription), ground_truth="".join(df.text))
     scores = {
         "model_name": model_name,
         "iteration": int(model_name.split("_")[-1]),
@@ -55,8 +54,15 @@ def transcribe_with_model(model_name: str, image_dir: Path, gt_df: pd.DataFrame,
         json.dump(scores, f, indent=4)
 
 
-def call_transcribe_with_params(params):
-    transcribe_with_model(*params)
+class TranscribeAndEvalParams(TypedDict):
+    model_name: str
+    dataset_path: Path
+    split: str
+    output_file: Path
+
+
+def call_transcribe_with_params(params: TranscribeAndEvalParams):
+    transcribe_and_eval(**params)
 
 
 def get_parser() -> ArgumentParser:
@@ -93,7 +99,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     setup_logging("eval_tesstrain_checkpoints", log_level=args.log_level)
 
-    all_params = []
+    all_params: list[TranscribeAndEvalParams] = []
 
     for model_name in args.model_names:
         logger.debug("Model name: %s", model_name)
@@ -102,18 +108,20 @@ if __name__ == "__main__":
         copy_models_to_tessdata(checkpoint_models_dir, args.tessdata)
 
         for split in args.splits:
-            gt_df = pd.read_csv(args.dataset_path / split / "_metadata.csv")
-            gt_df["image"] = gt_df.file_name.apply(lambda x: Path(x).name)
-            gt_df = gt_df.rename(columns={"text": "ground_truth"})
-
-            image_dir = args.dataset_path / split
             output_dir = args.output_dir / split
             output_dir.mkdir(exist_ok=True, parents=True)
 
             for checkpoint_model in checkpoint_models_dir.iterdir():
                 checkpoint_model_name = checkpoint_model.name[: -len(".traineddata")]
                 output_file = output_dir / f"{checkpoint_model_name}.json"
-                all_params.append((checkpoint_model_name, image_dir, gt_df, output_file))
+                all_params.append(
+                    {
+                        "model_name": checkpoint_model_name,
+                        "dataset_path": args.dataset_path,
+                        "split": split,
+                        "output_file": output_file,
+                    }
+                )
 
     with concurrent.futures.ProcessPoolExecutor() as executor:
         executor.map(call_transcribe_with_params, all_params)
