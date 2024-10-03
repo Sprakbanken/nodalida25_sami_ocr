@@ -16,41 +16,29 @@ logger = logging.getLogger(__name__)
 def get_language_specific_chars(base_model_language: str, gt_chars: str) -> list[str]:
     match base_model_language:
         case "nor":
-            base_language_alphabet = (
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÆØåæø"
-            )
+            base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÆØåæø"
         case "eng":
-            base_language_alphabet = (
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-            )
+            base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         case "est":
             base_language_alphabet = (
                 "ABDEFFGHIJKLMNOPRSTUVZZabdeffghijklmnoprstuvzzÄÕÖÜäõöüŠŠššŽŽžž"
             )
         case "fin":
-            base_language_alphabet = (
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÄÖåäö"
-            )
+            base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzÅÄÖåäö"
         case "":
             logger.info(
                 f"No base model language, using gt_chars - english alphabet to find special characters"
             )
-            base_language_alphabet = (
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-            )
+            base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         case _:
             logger.warning(
                 f"No alphabet found for base model language {base_model_language}, using gt_chars - english alphabet to find special characters"
             )
-            base_language_alphabet = (
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-            )
+            base_language_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
     not_letters = punctuation + whitespace + "«»–§"
     special_letters = [
-        c
-        for c in gt_chars
-        if c not in base_language_alphabet + not_letters and not c.isnumeric()
+        c for c in gt_chars if c not in base_language_alphabet + not_letters and not c.isnumeric()
     ]
     return special_letters
 
@@ -74,9 +62,9 @@ def get_parser() -> ArgumentParser:
         help="Three-letter langcode for language for the base model (if any)",
     )
     parser.add_argument(
-        "--line",
+        "--page",
         action="store_true",
-        help="If flagged, will assume line level predictions (and page level if not flagged)",
+        help="If flagged, will assume line page predictions (and line level if not flagged)",
     )
     parser.add_argument(
         "--log_level",
@@ -100,22 +88,19 @@ if __name__ == "__main__":
 
     model_name = args.predictions.name.rsplit("_", maxsplit=1)[0]
 
-    if args.line:
-        output_dir = args.output_dir / "line_level" / model_name
-    else:
+    if args.page:
         output_dir = args.output_dir / "page_level" / model_name
+    else:
+        output_dir = args.output_dir / "line_level" / model_name
+
     output_dir.mkdir(parents=True)
 
     df["CER"] = df.apply(
-        lambda row: compute_cer(
-            transcription=row.transcription, ground_truth=row.ground_truth
-        ),
+        lambda row: compute_cer(transcription=row.transcription, ground_truth=row.ground_truth),
         axis=1,
     )
     df["WER"] = df.apply(
-        lambda row: compute_wer(
-            transcription=row.transcription, ground_truth=row.ground_truth
-        ),
+        lambda row: compute_wer(transcription=row.transcription, ground_truth=row.ground_truth),
         axis=1,
     )
 
@@ -136,9 +121,7 @@ if __name__ == "__main__":
     )
     general_scorer = SpecialCharacterF1("".join(special_chars))
     df["special_char_F1"] = df.apply(
-        lambda row: general_scorer(
-            transcription=row.transcription, ground_truth=row.ground_truth
-        ),
+        lambda row: general_scorer(transcription=row.transcription, ground_truth=row.ground_truth),
         axis=1,
     )
     collection_level_scores["special_char_F1"] = df.special_char_F1.mean()
