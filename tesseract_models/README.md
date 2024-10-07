@@ -2,8 +2,8 @@
 
 ## Data
 - gt_smi: Manuelt annotert og korrigert samisk data
-- gt_nor: Manuelt annotert og korrigert norsk data (gt_pix)
-- auto_smi: Automatisk transkribert* data (side 30 fra masse forskjellige samiske bøker)
+- gt_nor: Manuelt annotert og korrigert norsk data (tidligere gt_pix)
+- pred_smi: Automatisk transkribert* samisk data (tidligere page_30/side_30)
 - synth_smi: Syntetiske bilder av ekte samisk tekst
 
 *Med en modell vi har trent i transkribus
@@ -12,16 +12,23 @@
 - a) fjerne linjene hvor bredden er mindre enn høyden
 - b) fjerne linjene hvor transkripsjonene er kortere enn 5 tegn
 
-a) gjøres for all data, b) gjøres kun for auto_smi
+a) gjøres for all data, b) gjøres kun for pred_smi
 
 ## Modeller
 
-### Modeller til artikkelen
-- smi: bare trent på den manuelt annoterte samiske dataen
-- nor_smi: norsk tesseractmodell videretrent på den manuelt annoterte samiske dataen (gt_smi)
-- nor_smi_nor: norsk tesseractmodell videretrent på den manuelt annoterte dataen (gt_smi + gt_nor)
-- nor_smi_smi: norsk tesseractmodell videretrent på den samiske dataen (gt_smi, auto_smi)
-- nor_all:  norsk tesseractmodell videretrent på all dataen (gt_smi, auto_smi, gt_nor)
+- ub_smi: tesseractmodell trent på den manuelt annoterte samiske dataen
+- smi: norsk tesseractmodell videretrent på den manuelt annoterte samiske dataen (gt_smi)
+- smi_nor: norsk tesseractmodell videretrent på den manuelt annoterte dataen (gt_smi + gt_nor)
+- smi_pred: norsk tesseractmodell videretrent på den samiske dataen (gt_smi + pred_smi)
+- smi_nor_pred:  norsk tesseractmodell videretrent på gt_smi + pred_smi + gt_nor
+
+- ub_smi: CER: 5.03% WER: 11.97%
+- smi: CER: 5.03% WER: 11.97%
+- smi_nor: CER: 5.03% WER: 11.97%
+- smi_pred: CER: 5.03% WER: 11.97%
+- smi_nor_pred: CER: 5.03% WER: 11.97%
+
+Modellene hadde andre navn under trening, dette ligger som old_name.txt i hver modellmappe
 
 ### Basemodell-eksperiment
 Trent én runde med tesseract på forskjellige basemodeller med vår data.
