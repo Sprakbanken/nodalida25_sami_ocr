@@ -82,6 +82,11 @@ def get_parser() -> ArgumentParser:
         default="",
     )
     parser.add_argument(
+        "--data_exists",
+        action="store_true",
+        help="If flagged, assumes ground truth data and data splits already exist for model",
+    )
+    parser.add_argument(
         "--log_level",
         type=str,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
@@ -114,6 +119,9 @@ if __name__ == "__main__":
         copy_data(
             model_data_dir, model_traindata_dir, other_model_traindata_dir, other_model_data_dir
         )
+    elif args.data_exists:
+        assert model_traindata_dir.exists()
+        assert model_data_dir.exists()
     else:
         model_traindata_dir.mkdir()
         model_data_dir.mkdir()
