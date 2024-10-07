@@ -48,6 +48,7 @@ def create_tesstrain_data(
         val_ds=val_dataset,
         output_dir=model_data_dir,
         prefix=f"data/{model_traindata_dir.name}/",
+        train_id_col="unique_id",
     )
 
 
