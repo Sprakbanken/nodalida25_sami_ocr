@@ -38,6 +38,7 @@ def transcribe_and_eval(model_name: str, dataset_path: Path, split: str, output_
         logger.warning(
             f"Encountered exception when running model {model_name} on dataset {dataset_path.name}/{split}"
         )
+        logger.error(ex)
         return
 
     WER_concat = compute_wer(

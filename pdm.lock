@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:49bf6598ebc047f3a7a1b1f203bdf10ca310e6296e59a9131664e6610341e5f7"
+content_hash = "sha256:49d687af85ddc8506902af8e78ecb9374798fdda21729e902f14097b4180e7f6"
 
 [[metadata.targets]]
 requires_python = ">=3.11"
@@ -277,7 +277,6 @@ version = "24.2.0"
 requires_python = ">=3.7"
 summary = "Classes Without Boilerplate"
 groups = ["default", "dev"]
-marker = "python_version >= \"3.12\""
 dependencies = [
     "importlib-metadata; python_version < \"3.8\"",
 ]
@@ -492,8 +491,8 @@ name = "colorama"
 version = "0.4.6"
 requires_python = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 summary = "Cross-platform colored terminal text."
-groups = ["default"]
-marker = "(platform_system == \"Windows\" or sys_platform == \"win32\") and python_version >= \"3.12\""
+groups = ["default", "dev"]
+marker = "platform_system == \"Windows\" or sys_platform == \"win32\""
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
@@ -1165,7 +1164,6 @@ version = "6.112.1"
 requires_python = ">=3.8"
 summary = "A library for property-based testing"
 groups = ["dev"]
-marker = "python_version >= \"3.12\""
 dependencies = [
     "attrs>=22.2.0",
     "exceptiongroup>=1.0.0; python_version < \"3.11\"",
@@ -1493,7 +1491,6 @@ version = "2.1.2"
 requires_python = ">=3.8"
 summary = "JupyterLab Extension enabling Real-Time Collaboration"
 groups = ["default"]
-marker = "python_version >= \"3.12\""
 dependencies = [
     "jsonschema>=4.18.0",
     "jupyter-events>=0.10.0",
@@ -1618,7 +1615,6 @@ version = "0.9.3"
 requires_python = ">=3.7"
 summary = "Jupyter Server extension providing an implementation of the File ID service."
 groups = ["default"]
-marker = "python_version >= \"3.12\""
 dependencies = [
     "jupyter-events>=0.5.0",
     "jupyter-server<3,>=1.15",
@@ -1649,7 +1645,6 @@ version = "2.1.1"
 requires_python = ">=3.7"
 summary = "Document structures for collaborative editing using Ypy"
 groups = ["default"]
-marker = "python_version >= \"3.12\""
 dependencies = [
     "importlib-metadata>=3.6; python_version < \"3.10\"",
     "pycrdt<0.10.0,>=0.9.0",
@@ -2851,7 +2846,7 @@ name = "ptyprocess"
 version = "0.7.0"
 summary = "Run a subprocess in a pseudo terminal"
 groups = ["default"]
-marker = "(sys_platform != \"win32\" and sys_platform != \"emscripten\" or os_name != \"nt\") and python_version >= \"3.12\""
+marker = "sys_platform != \"win32\" and sys_platform != \"emscripten\" or os_name != \"nt\""
 files = [
     {file = "ptyprocess-0.7.0-py2.py3-none-any.whl", hash = "sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35"},
     {file = "ptyprocess-0.7.0.tar.gz", hash = "sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220"},
@@ -2936,7 +2931,6 @@ version = "0.9.11"
 requires_python = ">=3.8"
 summary = "Python bindings for Yrs"
 groups = ["default"]
-marker = "python_version >= \"3.12\""
 dependencies = [
     "anyio<5.0.0,>=4.4.0",
 ]
@@ -2959,7 +2953,6 @@ version = "0.14.2"
 requires_python = ">=3.8"
 summary = "WebSocket connector for pycrdt"
 groups = ["default"]
-marker = "python_version >= \"3.12\""
 dependencies = [
     "anyio<5,>=3.6.2",
     "pycrdt<0.10.0,>=0.9.0",
@@ -3525,7 +3518,6 @@ version = "0.6.4"
 requires_python = ">=3.7"
 summary = "An extremely fast Python linter and code formatter, written in Rust."
 groups = ["default", "dev"]
-marker = "python_version >= \"3.12\""
 files = [
     {file = "ruff-0.6.4-py3-none-linux_armv6l.whl", hash = "sha256:c4b153fc152af51855458e79e835fb6b933032921756cec9af7d0ba2aa01a258"},
     {file = "ruff-0.6.4-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:bedff9e4f004dad5f7f76a9d39c4ca98af526c9b1695068198b3bda8c085ef60"},
@@ -3714,7 +3706,6 @@ name = "sortedcontainers"
 version = "2.4.0"
 summary = "Sorted Containers -- Sorted List, Sorted Dict, Sorted Set"
 groups = ["dev"]
-marker = "python_version >= \"3.12\""
 files = [
     {file = "sortedcontainers-2.4.0-py2.py3-none-any.whl", hash = "sha256:a163dcaede0f1c021485e957a39245190e74249897e2ae4b2aa38595db237ee0"},
     {file = "sortedcontainers-2.4.0.tar.gz", hash = "sha256:25caa5a06cc30b6b83d11423433f65d1f9d76c4c6a0c90e3379eaa43b9bfdb88"},
@@ -3769,7 +3760,6 @@ version = "0.2.3"
 requires_python = ">=3.8"
 summary = "Asynchronous client for SQLite using AnyIO"
 groups = ["default"]
-marker = "python_version >= \"3.12\""
 dependencies = [
     "anyio<5.0,>=4.0",
 ]
