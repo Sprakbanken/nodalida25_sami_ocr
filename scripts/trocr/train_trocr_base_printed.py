@@ -36,7 +36,7 @@ setup_logging(source_script=Path(__file__).stem, log_level="INFO")
 
 config = samisk_ocr.trocr.config.Config()
 mlflow.set_tracking_uri(config.mlflow_url)
-mlflow.set_experiment("TrOCR trocr-base-printed finetuning")
+mlflow.set_experiment("TrOCR trocr-base-printed finetuning after synth")
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -56,7 +56,7 @@ train_set = preprocess_dataset(
     min_len=1,
     filter_width=True,
     include_page_30=True,
-    include_gt_pix=True,
+    include_gt_pix=False,
     min_len_page_30=5,
 )
 logger.info("Data loaded")
@@ -64,7 +64,7 @@ logger.info("Data loaded")
 # Load the TrOCR processor and model
 logger.info("Loading TrOCR processor and model")
 processor = TrOCRProcessor.from_pretrained("microsoft/trocr-base-printed")
-model = VisionEncoderDecoderModel.from_pretrained("microsoft/trocr-base-printed").to(device)
+model = VisionEncoderDecoderModel.from_pretrained("data/wise-mule-742/checkpoint-165206").to(device)
 
 logger.info("Setting model and processor params")
 # Figure out the maximum token length in the training set, which we use this to control the maximum
@@ -150,7 +150,7 @@ with mlflow.start_run() as run:
         remove_unused_columns=False,
         #
         # Evaluation parameters
-        eval_strategy="steps",
+        eval_strategy="no",
         eval_steps=eval_steps,
         greater_is_better=False,
         logging_steps=50,
@@ -158,8 +158,7 @@ with mlflow.start_run() as run:
         predict_with_generate=True,
         #
         # Checkpoint parameters
-        load_best_model_at_end=True,
-        metric_for_best_model="eval_cer",
+        load_best_model_at_end=False,
         output_dir=checkpoint_dir,
         save_strategy="steps",  # Must be same as eval_strategy
         save_steps=eval_steps,
@@ -192,6 +191,7 @@ with mlflow.start_run() as run:
                 frequency=eval_steps,
                 key_prefix="eval_",
                 artifact_path=config.MLFLOW_ARTIFACT_PREDICTIONS_DIR,
+                final_eval_step=steps_per_epoch * 10,
             ),
             BatchedMultipleEvaluatorsCallback(
                 evaluators=evaluators,
