@@ -1,5 +1,6 @@
 import logging
 import sys
+from ast import literal_eval
 from datetime import datetime
 from pathlib import Path
 from typing import NamedTuple
@@ -63,6 +64,18 @@ def setup_logging(source_script: str, log_level: str):
 def clean_transcriptions(transcriptions: pd.Series) -> pd.Series:
     """Convert to string and strip"""
     return transcriptions.apply(str).apply(str.strip)
+
+
+def langcodes_to_langcode(df: pd.DataFrame) -> pd.DataFrame:
+    if "langcodes" not in df.columns:
+        raise ValueError("langcodes column not in dataframe")
+    df = df.copy()
+    langcodes = df.langcodes.apply(literal_eval)
+    if not all(langcodes.apply(len) == 1):
+        raise ValueError("more than one langcode in row dataframe")
+    df["langcode"] = langcodes.apply(lambda x: x[0])
+    del df["langcodes"]
+    return df
 
 
 def get_urn_to_langcode_map(
