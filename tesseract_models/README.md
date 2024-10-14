@@ -15,20 +15,53 @@
 a) gjøres for all data, b) gjøres kun for pred_smi
 
 ## Modeller
+Merk: Noen av modellene hadde andre navn under trening, dette ligger som old_name.txt i hver modellmappe
 
-- ub_smi: tesseractmodell trent på den manuelt annoterte samiske dataen
-- smi: norsk tesseractmodell videretrent på den manuelt annoterte samiske dataen (gt_smi)
-- smi_nor: norsk tesseractmodell videretrent på den manuelt annoterte dataen (gt_smi + gt_nor)
-- smi_pred: norsk tesseractmodell videretrent på den samiske dataen (gt_smi + pred_smi)
-- smi_nor_pred:  norsk tesseractmodell videretrent på gt_smi + pred_smi + gt_nor
+### ub_smi
+tesseractmodell trent på den manuelt annoterte samiske dataen
+Resultater på valideringssett:
+CER: 7.93% WER: 24.7%
 
-- ub_smi: CER: 5.03% WER: 11.97%
-- smi: CER: 5.03% WER: 11.97%
-- smi_nor: CER: 5.03% WER: 11.97%
-- smi_pred: CER: 5.03% WER: 11.97%
-- smi_nor_pred: CER: 5.03% WER: 11.97%
+### nor
+norsk tesseract_modell (fra tesseract sin github)
+Resultater på valideringssett:
+CER: 13.77% WER: 44.04%
 
-Modellene hadde andre navn under trening, dette ligger som old_name.txt i hver modellmappe
+### smi
+norsk tesseractmodell videretrent på den manuelt annoterte samiske dataen (gt_smi)
+Resultater på valideringssett:
+CER: 4.59% WER: 9.84%
+
+### smi_nor
+norsk tesseractmodell videretrent på den manuelt annoterte dataen (gt_smi + gt_nor)
+Resultater på valideringssett:
+CER: 4.91% WER: 11.39%
+
+### smi_pred
+norsk tesseractmodell videretrent på den samiske dataen (gt_smi + pred_smi)
+Resultater på valideringssett:
+CER: 4.42% WER: 8.17%
+
+### smi_nor_pred
+norsk tesseractmodell videretrent på gt_smi + pred_smi + gt_nor
+Resultater på valideringssett:
+CER: 4.4% WER: 7.96%
+
+### synth_base
+norsk tesseractmodell videretrent på synth_smi
+Resultater på valideringssett:
+CER: 5.56% WER: 12.88
+
+### sb_smi
+synth_base videretrent på den manuelt annoterte samiske dataen (gt_smi)
+Resultater på valideringssett:
+4.33 WER: 8.78%
+
+### sb_smi_nor_pred
+synth_base videretrent på gt_smi + pred_smi + gt_nor
+Resultater på valideringssett:
+CER: 4.36 WER 7.7%
+
 
 ### Basemodell-eksperiment
 Trent én runde med tesseract på forskjellige basemodeller med vår data.
