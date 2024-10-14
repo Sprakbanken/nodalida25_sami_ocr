@@ -22,7 +22,6 @@ config = samisk_ocr.trocr.config.Config()
 mlflow.set_tracking_uri(config.mlflow_url)
 mlflow.set_experiment(args.experiment_name)
 
-# Load the samisk dataset from Huggingface Hub
 logger = logging.getLogger(__name__)
 setup_logging(source_script=Path(__file__).stem, log_level="INFO")
 
