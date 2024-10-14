@@ -26,15 +26,27 @@ def transcribe(
     batch,
     processor,
     model,
-    device: torch.device,
 ) -> dict[str, list[str]]:
     rgb_images = [image.convert("RGB") for image in batch["image"]]
     processed_images = processor(images=rgb_images, return_tensors="pt").pixel_values
-    tokens = model.generate(processed_images.to(device))
+    tokens = model.generate(processed_images.to(model.device))
     texts = processor.batch_decode(tokens, skip_special_tokens=True)
-    return {
-        "transcription": texts,
-    }
+    return {"transcription": texts}
+
+
+def load_model(model_name: str, processor_name: str | None = None) -> tuple[TrOCRProcessor, VisionEncoderDecoderModel]:
+    if not processor_name:
+        processor_name = model_name
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    processor = TrOCRProcessor.from_pretrained(processor_name)
+    model = VisionEncoderDecoderModel.from_pretrained(model_name).to(device)
+    model.generation_config.use_cache = True
+
+    assert model.config.decoder_start_token_id == processor.tokenizer.cls_token_id
+    assert model.config.pad_token_id == processor.tokenizer.pad_token_id
+    assert model.config.vocab_size == model.config.decoder.vocab_size
+    return processor, model
 
 
 def transcribe_dataset(
@@ -43,20 +55,12 @@ def transcribe_dataset(
     """Run TrOCR model on all images in dataset split"""
     df = pd.read_csv(dataset_path / split / "_metadata.csv")
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    processor = TrOCRProcessor.from_pretrained(model_name)
-    model = VisionEncoderDecoderModel.from_pretrained(model_name).to(device)
-    model.generation_config.use_cache = True
-
-    assert model.config.decoder_start_token_id == processor.tokenizer.cls_token_id
-    assert model.config.pad_token_id == processor.tokenizer.pad_token_id
-    assert model.config.vocab_size == model.config.decoder.vocab_size
-
+    processor, model = load_model(model_name)
     logger.info("TrOCR model generation config %s", model.generation_config)
 
     ds = load_dataset(str(dataset_path), split=split_to_datasets_split(split))
     ds_with_transcriptions = ds.map(
-        partial(transcribe, processor=processor, model=model, device=device),
+        partial(transcribe, processor=processor, model=model),
         batched=True,
         batch_size=batch_size,
     )

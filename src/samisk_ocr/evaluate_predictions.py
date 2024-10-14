@@ -86,7 +86,7 @@ if __name__ == "__main__":
     df["transcription"] = df.transcription.apply(str)
     df = df.rename(columns={"text": "ground_truth"})
 
-    model_name = args.predictions.name.rsplit("_", maxsplit=1)[0]
+    model_name = args.predictions.name.rpartition("_")[0]
 
     if args.page:
         output_dir = args.output_dir / "page_level" / model_name

@@ -31,6 +31,7 @@ dependencies = [
     "jupyter-collaboration>=2.1.2",
     "statsmodels>=0.14.2",
     "kaleido==0.2.1",
+    "lxml>=5.3.0",
 ]
 
 [build-system]
