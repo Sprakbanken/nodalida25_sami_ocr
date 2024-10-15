@@ -95,13 +95,13 @@ def evaluate(df: pd.DataFrame, output_dir: Path):
                 transcription="".join(lang_df.transcription),
             )
 
-        with (output_dir / f"{lang}_rows.json").open("w+") as f:
-            f.write(json.dumps(lang_scores, ensure_ascii=False, indent=4))
+        with (output_dir / f"{lang}_rows.json").open("w+", encoding="utf-8") as f:
+            f.write(json.dumps(lang_scores, indent=4))
 
     df.to_csv(output_dir / "row_level.csv", index=False)
 
-    with (output_dir / "all_rows.json").open("w+") as f:
-        f.write(json.dumps(collection_level_scores, ensure_ascii=False, indent=4))
+    with (output_dir / "all_rows.json").open("w+", encoding="utf-8") as f:
+        f.write(json.dumps(collection_level_scores, indent=4))
 
 
 def get_parser() -> ArgumentParser:
