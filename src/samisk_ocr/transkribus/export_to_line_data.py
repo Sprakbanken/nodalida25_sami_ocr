@@ -81,7 +81,7 @@ def transkribus_export_to_lines(
                 )
                 logger.debug(f"Created {output_image_path}")
             except Exception as ex:
-                logger.warn(ex)
+                logger.warning(ex)
                 logger.info(f"{input_image_path}, {i}")
                 logger.info("----")
                 continue
