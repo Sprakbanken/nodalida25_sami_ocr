@@ -123,6 +123,11 @@ def get_parser() -> ArgumentParser:
         help="If flagged, will assume page level predictions (default is line level)",
     )
     parser.add_argument(
+        "--remove_pliktmono",
+        action="store_true",
+        help="If flagged, will remove rows where 'pliktmonografi' is a substring in column 'file_name' ",
+    )
+    parser.add_argument(
         "--log_level",
         type=str,
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
@@ -140,6 +145,13 @@ if __name__ == "__main__":
 
     for prediction in args.prediction_dir.iterdir():
         df = pd.read_csv(prediction)
+        if args.remove_pliktmono:
+            logger.info("Removing pliktmonografi rows")
+            logger.debug("Num rows before %s", len(df))
+            df = df[df.file_name.apply(lambda x: "pliktmonografi" not in x)]
+            df.index = range(len(df))
+            logger.debug("Num rows after %s", len(df))
+
         df["transcription"] = df.transcription.apply(str)
         df = df.rename(columns={"text": "ground_truth"})
 
