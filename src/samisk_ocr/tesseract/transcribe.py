@@ -99,7 +99,7 @@ if __name__ == "__main__":
         output_dir = args.output_dir / "line_level"
 
     output_dir.mkdir(exist_ok=True, parents=True)
-    output_csv = output_dir / f"{args.model_name}_{args.split}.csv"
+    output_csv = output_dir / f"tess_{args.model_name}_{args.split}.csv"
     df.to_csv(output_csv, index=False)
 
     logger.info(f"Wrote predicted transcriptions to {output_csv}")

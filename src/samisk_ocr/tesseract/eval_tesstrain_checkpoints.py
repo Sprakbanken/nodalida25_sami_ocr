@@ -29,6 +29,7 @@ def remove_models_from_tessdata(model_dir: Path, tessdata_dir: Path):
 
 def transcribe_and_eval(model_name: str, dataset_path: Path, split: str, output_file: Path):
     if output_file.exists():
+        logger.info("Output file %s already exists, skipping", output_file)
         return
     try:
         df = transcribe_dataset(
@@ -38,6 +39,7 @@ def transcribe_and_eval(model_name: str, dataset_path: Path, split: str, output_
         logger.warning(
             f"Encountered exception when running model {model_name} on dataset {dataset_path.name}/{split}"
         )
+        logger.error(ex)
         return
 
     WER_concat = compute_wer(
