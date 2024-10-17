@@ -103,6 +103,7 @@ if __name__ == "__main__":
         assert len(bbox_mapping_index) == len(bbox_mapping_index.unique())
         assert len(testset_urn_page) == len(testset_urn_page.text[bbox_mapping_index].dropna())
         prediction_diff.loc[df_.index, "text"] = testset_urn_page.text[bbox_mapping_index].to_list()
+        prediction_diff.loc[df_.index, "line"] = testset_urn_page.line[bbox_mapping_index].to_list()
         prediction_diff.loc[df_.index, "langcodes"] = testset_urn_page.langcodes[
             bbox_mapping_index
         ].to_list()
@@ -112,6 +113,8 @@ if __name__ == "__main__":
     assert len(new_testset_df.text.dropna()) == len(new_testset_df)
 
     logger.debug("New testset df length %s", len(new_testset_df))
+
+    inner_testset_df = new_testset_df.copy()
 
     img_p = new_testset_output_p / "test"
     img_p.mkdir(parents=True)
@@ -128,6 +131,7 @@ if __name__ == "__main__":
         img = img.crop(e.bbox)
         img.save(output_img)
         new_testset_df.at[e.Index, "file_name"] = "test/" + output_img.name
+        inner_testset_df.at[e.Index, "file_name"] = output_img.name
 
     new_testset_df[
         [
@@ -143,6 +147,21 @@ if __name__ == "__main__":
             "line",
         ]
     ].to_csv(new_testset_output_p / "metadata.csv", index=False)
+
+    inner_testset_df[
+        [
+            "file_name",
+            "text",
+            "langcodes",
+            "xmin",
+            "ymin",
+            "xmax",
+            "ymax",
+            "urn",
+            "page",
+            "line",
+        ]
+    ].to_csv(new_testset_output_p / "test" / "_metadata.csv", index=False)
 
     ds = load_dataset(str(new_testset_output_p), split="test")
     logger.debug(ds)
