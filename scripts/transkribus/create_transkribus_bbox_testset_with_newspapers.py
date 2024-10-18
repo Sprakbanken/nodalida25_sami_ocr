@@ -58,10 +58,11 @@ if __name__ == "__main__":
     newspaper_gt_export = Path("data/transkribus_exports/test_data/aviser")
     newspaper_prediction_export = Path("data/transkribus_exports/predictions/test_set_aviser")
     new_testset_output_p = Path("data/new_testset_with_newspapers/")
+    log_level = "DEBUG"
     ############################
 
     setup_logging(
-        source_script="create_transkribus_bbox_testset_with_newspapers", log_level="DEBUG"
+        source_script="create_transkribus_bbox_testset_with_newspapers", log_level=log_level
     )
     logger.info(
         "Comparing transkribus gt export %s bboxes to transkribus prediction export %s bboxes",
@@ -75,6 +76,17 @@ if __name__ == "__main__":
     )
     old_testset_prediction_df = add_urn_page_line_bboxes_to_df(old_testset_prediction_df)
     old_testset_gt_df = add_urn_page_line_bboxes_to_df(old_testset_gt_df)
+
+    # Remove pliktmonografi-lines
+    old_testset_gt_df = old_testset_gt_df[
+        old_testset_gt_df.image.apply(lambda x: "pliktmonografi" not in x)
+    ]
+    old_testset_gt_df.index = range(len(old_testset_gt_df))
+
+    old_testset_prediction_df = old_testset_prediction_df[
+        old_testset_prediction_df.image.apply(lambda x: "pliktmonografi" not in x)
+    ]
+    old_testset_prediction_df.index = range(len(old_testset_prediction_df))
 
     assert sorted(old_testset_gt_df.urn) == sorted(old_testset_prediction_df.urn)
     assert len(old_testset_gt_df) == len(old_testset_prediction_df)
