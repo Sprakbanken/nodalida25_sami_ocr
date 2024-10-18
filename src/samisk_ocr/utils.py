@@ -79,11 +79,12 @@ def langcodes_to_langcode(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_urn_to_langcode_map(
-    trainset_languages: Path = Path("data/trainset_languages.tsv"),
-    testset_languages: Path = Path("data/testset_languages.tsv"),
+    trainset_languages: Path = Path("data/common/trainset_languages.tsv"),
+    testset_languages: Path = Path("data/common/testset_languages.tsv"),
     train_data_path: Path = Path("data/transkribus_exports/train_data/train"),
     gt_pix_path: Path = Path("data/transkribus_exports/train_data/GT_pix"),
     page_30_path: Path = Path("data/transkribus_exports/train_data/side_30"),
+    newspaper_path: Path = Path("data/transkribus_exports/test_data/aviser"),
 ) -> dict[str, list[str]]:
     """Get mapping from urn to language code for each urn in the data"""
     doc_id_to_lang_df = pd.read_csv(trainset_languages, sep="\t")
@@ -107,6 +108,10 @@ def get_urn_to_langcode_map(
             urns = [page_image_stem_to_urn_page(path.stem)[0] for path in sub_dir.glob("*.jpg")]
             for urn in urns:
                 urns_to_langcodes[urn] = [langcode]
+
+    for e in newspaper_path.glob("**/*.jpg"):
+        urn = page_image_stem_to_urn_page(e.stem)[0]
+        urns_to_langcodes[urn] = ["sme"]
 
     testdata_page_urn_to_lang_df = pd.read_csv(testset_languages, sep="\t")
     urns = testdata_page_urn_to_lang_df.side_filnavn.apply(lambda x: x[:-5])
