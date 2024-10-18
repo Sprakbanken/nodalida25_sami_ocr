@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 def transcribe(model_name: str, image: Path, config: str) -> str:
-    return pytesseract.image_to_string(Image.open(image), lang=model_name, config=config)
+    return pytesseract.image_to_string(
+        Image.open(image), lang=model_name, config=config
+    )
 
 
 def transcribe_dataset(
@@ -41,8 +43,12 @@ def transcribe_dataset(
         )
         if line_level and not transcription:
             logger.debug("No transcription for %s", tup.file_name)
-            logger.debug("Trying to transcribe with --psm 8 (treat image as single word)")
-            transcription = transcribe(model_name, image=img_file_name, config="--psm 8")
+            logger.debug(
+                "Trying to transcribe with --psm 8 (treat image as single word)"
+            )
+            transcription = transcribe(
+                model_name, image=img_file_name, config="--psm 8"
+            )
         if not transcription:
             logger.debug("No transcription for %s", tup.file_name)
         transcriptions.append(transcription)
@@ -99,7 +105,7 @@ if __name__ == "__main__":
         output_dir = args.output_dir / "line_level"
 
     output_dir.mkdir(exist_ok=True, parents=True)
-    output_csv = output_dir / f"{args.model_name}_{args.split}.csv"
+    output_csv = output_dir / f"tess_{args.model_name}_{args.split}.csv"
     df.to_csv(output_csv, index=False)
 
     logger.info(f"Wrote predicted transcriptions to {output_csv}")
