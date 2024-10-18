@@ -153,6 +153,7 @@ class MultipleEvaluatorsCallback(TrainerCallback):
         key_prefix: str,
         artifact_path: Path,
         batch_size: int = 8,
+        final_eval_step: float = float("inf"),
         unique_identifiers: Sequence[str] = ("urn", "page", "line"),
     ):
         self.evaluators = evaluators
@@ -163,6 +164,7 @@ class MultipleEvaluatorsCallback(TrainerCallback):
         self.key_prefix = key_prefix
         self.batch_size = batch_size
         self.artifact_path = artifact_path
+        self.final_eval_step = final_eval_step
         self.unique_identifiers = unique_identifiers
 
     def on_step_end(
@@ -173,7 +175,11 @@ class MultipleEvaluatorsCallback(TrainerCallback):
         model: transformers.modeling_utils.PreTrainedModel,
         **kwargs: Unpack[CallbackKwargs],
     ) -> None:
-        if self.frequency is None or state.global_step % self.frequency != 0:
+        if (
+            self.frequency is None
+            or state.global_step % self.frequency != 0
+            or state.global_step > self.final_eval_step
+        ):
             return
 
         pred_texts = []

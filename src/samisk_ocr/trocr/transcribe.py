@@ -83,6 +83,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset",
         help="Path to local dataset",
+        type=Path,
         default=Path("data/samisk_ocr_dataset/"),
     )
     parser.add_argument("--split", default="val", help="Dataset split to transcribe")
