@@ -15,7 +15,7 @@ if __name__ == "__main__":
         "data/transkribus_exports/predictions/test_set/Testsett_Samisk_OCR_testing"
     )
     testset_predictions2 = Path("data/transkribus_exports/predictions/test_set_aviser")
-    output_dir = Path("output/testset_preds")
+    output_dir = Path("output/testset_preds/line_level")
 
     ##############################
 
@@ -25,10 +25,8 @@ if __name__ == "__main__":
 
     pred_df2 = get_line_transcriptions(testset_predictions2)
     pred_df = pd.concat([pred_df1, pred_df2], ignore_index=True)
-    print(len(pred_df), len(pred_df1) + len(pred_df2))
 
     dataset_df = pd.read_csv(testset_p / "test" / "_metadata.csv")
-    print(len(dataset_df))
 
     df = dataset_df.merge(
         pred_df,
