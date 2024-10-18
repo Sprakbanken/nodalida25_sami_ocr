@@ -13,9 +13,9 @@ from samisk_ocr.utils import setup_logging
 logger = logging.getLogger(__name__)
 
 
-def copy_image_files_and_create_gt_files(ds: Dataset, output_dir: Path):
+def copy_image_files_and_create_gt_files(ds: Dataset, output_dir: Path, id_col: str = "urn"):
     for i, e in enumerate(ds):
-        file_stem = f"{e['urn']}_{i}"
+        file_stem = f"{e[id_col]}_{i}"
         out_p = output_dir / f"{file_stem}.gt.txt"
         with out_p.open("w+") as f:
             f.write(e["text"])
@@ -23,12 +23,19 @@ def copy_image_files_and_create_gt_files(ds: Dataset, output_dir: Path):
         img.save(output_dir / f"{file_stem}.png")
 
 
-def create_train_eval_lists(train_ds: Dataset, val_ds: Dataset, output_dir: Path, prefix: str):
-    train_lstmf_names = [f"{prefix}{e['urn']}_{i}.lstmf" for i, e in enumerate(train_ds)]
+def create_train_eval_lists(
+    train_ds: Dataset,
+    val_ds: Dataset,
+    output_dir: Path,
+    prefix: str,
+    train_id_col: str = "urn",
+    val_id_col: str = "urn",
+):
+    train_lstmf_names = [f"{prefix}{e[train_id_col]}_{i}.lstmf" for i, e in enumerate(train_ds)]
     with open(output_dir / "list.train", "w+") as f:
         f.write("\n".join(train_lstmf_names))
 
-    val_lstmf_names = [f"{prefix}{e['urn']}_{i}.lstmf" for i, e in enumerate(val_ds)]
+    val_lstmf_names = [f"{prefix}{e[val_id_col]}_{i}.lstmf" for i, e in enumerate(val_ds)]
     with open(output_dir / "list.eval", "w+") as f:
         f.write("\n".join(val_lstmf_names))
 
