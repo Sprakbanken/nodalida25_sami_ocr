@@ -27,6 +27,12 @@ def find_row_index_with_biggest_overlap(bbox: Bbox, df: pd.DataFrame) -> int:
     return int(overlaps.argmax())
 
 
+def urn_page_line_bbox_to_filename(
+    urn: str, page: str, line: int, bbox: Bbox, file_extension: str = ".jpg"
+) -> str:
+    pass
+
+
 def add_urn_page_line_bboxes_to_df(
     df: pd.DataFrame, image_filename_column: str = "image"
 ) -> pd.DataFrame:
@@ -163,7 +169,6 @@ if __name__ == "__main__":
         prediction_diff.loc[df_.index, "text"] = testset_urn_page.transcription_gt[
             bbox_mapping_index
         ].to_list()
-        prediction_diff.loc[df_.index, "line"] = testset_urn_page.line[bbox_mapping_index].to_list()
 
     assert len(prediction_diff.text.dropna()) == len(prediction_diff)
 
