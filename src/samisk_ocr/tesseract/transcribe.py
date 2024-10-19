@@ -16,9 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def transcribe(model_name: str, image: Path, config: str) -> str:
-    return pytesseract.image_to_string(
-        Image.open(image), lang=model_name, config=config
-    )
+    return pytesseract.image_to_string(Image.open(image), lang=model_name, config=config).strip()
 
 
 def transcribe_dataset(
