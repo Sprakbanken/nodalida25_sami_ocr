@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 import json
 import logging
 from argparse import ArgumentParser
@@ -5,9 +6,12 @@ from pathlib import Path
 from typing import Literal
 
 import pandas as pd
+import stringalign
+from stringalign.evaluation import TranscriptionEvaluator
 
 from samisk_ocr.metrics import SpecialCharacterF1, compute_cer, compute_wer
 from samisk_ocr.utils import langcodes_to_langcode, setup_logging
+from samisk_ocr.clean_text_data import clean
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +27,35 @@ def get_language_specific_chars(lang: Literal["smi", "sme", "smn", "sma", "smj"]
     return char_df.bokstav.to_list()
 
 
+def get_character_info(
+    ground_truth: Sequence[str], transcription: Sequence[str]
+) -> dict[str, tuple[tuple[tuple[str, str], int], ...] | tuple[tuple[str, int], ...]]:
+    evaluator = TranscriptionEvaluator.from_strings(
+        ground_truth,
+        transcription,
+    )
+    aggregated_confusion_matrix = sum(
+        (
+            stringalign.statistics.StringConfusionMatrix.from_strings_and_alignment(
+                reference=le.reference, predicted=le.predicted, alignment=le.alignment
+            )
+            for le in evaluator.line_errors
+        ),
+        start=stringalign.statistics.StringConfusionMatrix.get_empty(),
+    )
+    return {
+        "mistakes": tuple(
+            ((op.generalize().substring, op.generalize().replacement), count)
+            for op, count in aggregated_confusion_matrix.edit_counts.most_common()
+        ),
+        "true_positives": tuple(evaluator.confusion_matrix.true_positives.items()),
+        "false_positives": tuple(evaluator.confusion_matrix.false_positives.items()),
+        "false_negatives": tuple(evaluator.confusion_matrix.false_negatives.items()),
+    }
+
+
 def evaluate(df: pd.DataFrame, output_dir: Path):
+    df["ground_truth"] = df.ground_truth.apply(clean)
     df["CER"] = df.apply(
         lambda row: compute_cer(transcription=row.transcription, ground_truth=row.ground_truth),
         axis=1,
@@ -65,6 +97,10 @@ def evaluate(df: pd.DataFrame, output_dir: Path):
         collection_level_scores[char]["F1_concat"] = char_scorer(
             transcription="".join(df.transcription), ground_truth="".join(df.ground_truth)
         )
+
+    collection_level_scores |= get_character_info(
+        ground_truth=df["ground_truth"], transcription=df["transcription"]
+    )
 
     for lang, lang_df in df.groupby("langcode"):
         lang_scores = {}
@@ -134,6 +170,11 @@ def get_parser() -> ArgumentParser:
         default="INFO",
         help="Set the logging level",
     )
+    parser.add_argument(
+        "--baseline_csv",
+        type=Path,
+        help="Path to csv with baseline transcriptions, used to filter out rows where the baseline has CER > 0.5",
+    )
     return parser
 
 
@@ -143,8 +184,22 @@ if __name__ == "__main__":
     setup_logging(source_script="evaluate_predictions", log_level=args.log_level)
     logger.info(args)
 
+    if args.baseline_csv:
+        baseline_df = pd.read_csv(args.baseline_csv)
+        baseline_df["cer"] = baseline_df.apply(
+            lambda row: compute_cer(ground_truth=row.text, transcription=row.transcription),
+            axis=1,
+        )
+        to_skip = set(Path(n).name for n in baseline_df.query("cer > 0.5").file_name)
+    else:
+        to_skip = set()
+
+    logger.info("Skipping %s rows due to bad baseline: %s", len(to_skip), to_skip)
     for prediction in args.prediction_dir.iterdir():
         df = pd.read_csv(prediction)
+        df = df.assign(file_name=df.file_name.map(lambda x: Path(x).name))
+        df = df.query("file_name not in @to_skip", local_dict={"to_skip": to_skip})
+
         if args.remove_pliktmono:
             logger.info("Removing pliktmonografi rows")
             logger.debug("Num rows before %s", len(df))

@@ -5,7 +5,7 @@
 groups = ["default", "dev"]
 strategy = ["inherit_metadata"]
 lock_version = "4.5.0"
-content_hash = "sha256:1732816c41f68b858309c74c108254f17366d84903d426b0d3909cada6e7d4e4"
+content_hash = "sha256:29a3a6442ead10a940b7ca6ba189d186f2199e27f27bc8c87109b15fcc943d1a"
 
 [[metadata.targets]]
 requires_python = ">=3.11"
@@ -3882,6 +3882,20 @@ files = [
     {file = "statsmodels-0.14.2-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:f870d14a587ea58a3b596aa994c2ed889cc051f9e450e887d2c83656fc6a64bf"},
     {file = "statsmodels-0.14.2-cp312-cp312-win_amd64.whl", hash = "sha256:f450fcbae214aae66bd9d2b9af48e0f8ba1cb0e8596c6ebb34e6e3f0fec6542c"},
     {file = "statsmodels-0.14.2.tar.gz", hash = "sha256:890550147ad3a81cda24f0ba1a5c4021adc1601080bd00e191ae7cd6feecd6ad"},
+]
+
+[[package]]
+name = "stringalign"
+version = "0.1.0"
+requires_python = ">=3.11"
+url = "https://github.com/yngvem/stringalign/archive/refs/heads/detect-nonunique-alignments.zip"
+summary = "Align strings and compute evaluation metrics"
+groups = ["default"]
+dependencies = [
+    "numpy>=2.1.1",
+]
+files = [
+    {file = "detect-nonunique-alignments.zip", hash = "sha256:438baa79d4f5788922cecedb4e903d6aaacd4e292e73d46a2ebfaf2cce3ecc7a"},
 ]
 
 [[package]]

@@ -32,6 +32,8 @@ dependencies = [
     "statsmodels>=0.14.2",
     "kaleido==0.2.1",
     "lxml>=5.3.0",
+    "stringalign @ https://github.com/yngvem/stringalign/archive/refs/heads/detect-nonunique-alignments.zip",
+    "httpx>=0.27.2",
 ]
 
 [build-system]
