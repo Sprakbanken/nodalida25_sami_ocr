@@ -30,7 +30,7 @@ if __name__ == "__main__":
     pred_df = pred_df.assign(
         image=pred_df["image"].map(
             lambda s: re.sub(r"_\d{3}_\d{4}_\d{4}_\d{4}_\d{4}[.]jpg", ".png", s)
-        )
+        ),
     )
     dataset_df = pd.read_csv(testset_p / "test" / "_metadata.csv")
 

@@ -30,13 +30,20 @@ def read_text_files(text_dir: Path, df: pd.DataFrame) -> list[str]:
 
 
 def image_stem_annotation_to_filename(
-    image_stem: str, annotation: Annotation, line_num: int
+    image_stem: str,
+    annotation: Annotation,
+    line_num: int,
+    add_ending: bool,
 ) -> str:
+    if not add_ending:
+        return f"{image_stem}.jpg"
     x1, y1, x2, y2 = annotation["bbox"]
     return f"{image_stem}_{line_num:03d}_{x1:04d}_{y1:04d}_{x2:04d}_{y2:04d}.jpg"
 
 
-def get_line_transcriptions(input_dir: Path, keep_source_imgs: bool = False) -> pd.DataFrame:
+def get_line_transcriptions(
+    input_dir: Path, keep_source_imgs: bool = False, add_ending: bool = True
+) -> pd.DataFrame:
     """Get line transcriptions from transkribus xml-file, and create 'filenames' based on xml-file-bbox"""
     alto_xml_files = input_dir.glob("**/alto/*.xml")
     df_data = {"image": [], "transcription": []}
@@ -46,7 +53,9 @@ def get_line_transcriptions(input_dir: Path, keep_source_imgs: bool = False) -> 
         annotations = get_annotation_information(alto_xml_file)
         df_data["transcription"] += [annotation["word"] for annotation in annotations]
         df_data["image"] += [
-            image_stem_annotation_to_filename(alto_xml_file.stem, annotation=annotation, line_num=i)
+            image_stem_annotation_to_filename(
+                alto_xml_file.stem, annotation=annotation, line_num=i, add_ending=add_ending
+            )
             for i, annotation in enumerate(annotations)
         ]
         if keep_source_imgs:
