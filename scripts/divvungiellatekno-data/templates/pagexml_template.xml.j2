@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<PcGts xmlns="http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15 http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15/pagecontent.xsd">
+    <Metadata>
+        <Creator>Synthetic data</Creator>
+        <Created>{{ timestamp }}</Created>
+        <LastChange>{{ timestamp }}</LastChange>
+    </Metadata>
+    <Page imageFilename="{{ image_file }}" imageWidth="{{ image_width }}" imageHeight="{{ image_height }}">
+        <ReadingOrder>
+            <OrderedGroup id="{{ image_file.stem }}" caption="Regions reading order">
+                <RegionRefIndexed index="0" regionRef="{{ image_file.stem }}_000"/>
+            </OrderedGroup>
+        </ReadingOrder>
+        <TextRegion type="paragraph" id="{{ image_file.stem }}_000" custom="readingOrder {index:0;} structure {type:paragraph;}">
+            <Coords points="0,0 {{image_width}},0 {{image_width}},{{image_height}} 0,{{image_height}}"/>
+            <TextLine id="line_1727782343883_480" custom="readingOrder {index:0;}">
+                <Coords points="0,0 {{image_width}},0 {{image_width}},{{image_height}} 0,{{image_height}}"/>
+                <Baseline points="0,{{baseline_y}} {{image_width}},{{baseline_y}}"/>
+                <TextEquiv>
+                    <Unicode>{{ text }}</Unicode>
+                </TextEquiv>
+            </TextLine>
+            <TextEquiv>
+                <Unicode>{{ text }}</Unicode>
+            </TextEquiv>
+        </TextRegion>
+    </Page>
+</PcGts>

@@ -50,7 +50,10 @@ def load_model(model_name: str, processor_name: str | None = None) -> tuple[TrOC
 
 
 def transcribe_dataset(
-    model_name: str, dataset_path: Path, split: str, batch_size: int
+    model_name: str,
+    dataset_path: Path,
+    split: str,
+    batch_size: int,
 ) -> pd.DataFrame:
     """Run TrOCR model on all images in dataset split"""
     df = pd.read_csv(dataset_path / split / "_metadata.csv")
@@ -58,17 +61,19 @@ def transcribe_dataset(
     processor, model = load_model(model_name)
     logger.info("TrOCR model generation config %s", model.generation_config)
 
-    ds = load_dataset(str(dataset_path), split=split_to_datasets_split(split))
+    ds = load_dataset(
+        "imagefolder", data_dir=str(dataset_path), split=split_to_datasets_split(split)
+    )
     ds_with_transcriptions = ds.map(
         partial(transcribe, processor=processor, model=model),
         batched=True,
         batch_size=batch_size,
     )
-
     ds_df = ds_with_transcriptions.to_pandas()
-    ds_df = ds_df[["transcription", "urn", "page", "line"]]
+    ds_df["file_name"] = ds.to_pandas()["image"].map(lambda x: Path(x["path"]).name)
+    ds_df = ds_df[["file_name", "transcription"]]
 
-    df_with_transcriptions = df.merge(ds_df, on=["urn", "page", "line"], validate="1:1")
+    df_with_transcriptions = df.merge(ds_df, on="file_name", validate="1:1")
     assert len(df_with_transcriptions) == len(df)
 
     return df_with_transcriptions
@@ -83,6 +88,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset",
         help="Path to local dataset",
+        type=Path,
         default=Path("data/samisk_ocr_dataset/"),
     )
     parser.add_argument("--split", default="val", help="Dataset split to transcribe")

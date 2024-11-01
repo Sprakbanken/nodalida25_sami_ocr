@@ -56,6 +56,11 @@ def line_image_dir_to_urn_line_bbox_df(
     return df
 
 
+def find_image_with_biggest_bbox_overlap(bbox: Bbox, other_df: pd.DataFrame) -> str:
+    overlaps = other_df.bbox.apply(partial(calculate_overlap_area, bbox2=bbox))
+    return other_df.image[overlaps.argmax()]
+
+
 def map_transkribus_image_lines_to_gt_image_lines(
     transkribus_df: pd.DataFrame, gt_image_dir: Path
 ) -> pd.Series:
@@ -98,12 +103,9 @@ def map_transkribus_image_lines_to_gt_image_lines(
 
         # Find closest ground truth bbox to each transkribus bbox that differs from ground truth
         for transk_tup in transkribus_df_[different_bbox].itertuples():
-            overlaps = bbox_differs_gt_lines.bbox.apply(
-                partial(calculate_overlap_area, bbox2=transk_tup.bbox)
+            transkribus_df_.at[transk_tup.Index, "gt_image"] = find_image_with_biggest_bbox_overlap(
+                bbox=transk_tup.bbox, other_df=bbox_differs_gt_lines
             )
-            transkribus_df_.at[transk_tup.Index, "gt_image"] = bbox_differs_gt_lines.image[
-                overlaps.argmax()
-            ]
 
         assert len(set(transkribus_df_.gt_image)) == len(transkribus_df_)
         dfs.append(transkribus_df_)
