@@ -1,71 +1,26 @@
-# Forklaring av tesseract-modellene
+# Tesseract models readme
 
-## Data
-- gt_smi: Manuelt annotert og korrigert samisk data
-- gt_nor: Manuelt annotert og korrigert norsk data (tidligere gt_pix)
-- pred_smi: Automatisk transkribert* samisk data (tidligere page_30/side_30)
-- synth_smi: Syntetiske bilder av ekte samisk tekst
+This directory contains a subdirectory for each tesseract model, plus [initial_experiments/](initial_experiments/).
 
-*Med en modell vi har trent i transkribus
+initial_experiments contains the training arguments and plots of model checkpoints from the fine-tuning of the Estoinian, Finnish and Norwegian tessdata-best base models on the GT-Sámi train set.
 
-### Dataprosessering
-- a) fjerne linjene hvor bredden er mindre enn høyden
-- b) fjerne linjene hvor transkripsjonene er kortere enn 5 tegn
+Each model subdirectory contains the .traineddata model file and a folder with the training details.
 
-a) gjøres for all data, b) gjøres kun for pred_smi
+## Models overview
+[ub_smi](ub_smi) is tesseract model trained from scratch on GT-Sámi (the first row in table 3)
 
-## Modeller
-Merk: Noen av modellene hadde andre navn under trening, dette ligger som old_name.txt i hver modellmappe
-
-### ub_smi
-tesseractmodell trent på den manuelt annoterte samiske dataen
-Resultater på valideringssett:
-CER: 7.93% WER: 24.7%
-
-### nor
-norsk tesseract_modell (fra tesseract sin github)
-Resultater på valideringssett:
-CER: 13.77% WER: 44.04%
-
-### smi
-norsk tesseractmodell videretrent på den manuelt annoterte samiske dataen (gt_smi)
-Resultater på valideringssett:
-CER: 4.59% WER: 9.84%
-
-### smi_nor
-norsk tesseractmodell videretrent på den manuelt annoterte dataen (gt_smi + gt_nor)
-Resultater på valideringssett:
-CER: 4.91% WER: 11.39%
-
-### smi_pred
-norsk tesseractmodell videretrent på den samiske dataen (gt_smi + pred_smi)
-Resultater på valideringssett:
-CER: 4.42% WER: 8.17%
-
-### smi_nor_pred
-norsk tesseractmodell videretrent på gt_smi + pred_smi + gt_nor
-Resultater på valideringssett:
-CER: 4.4% WER: 7.96%
-
-### synth_base
-norsk tesseractmodell videretrent på synth_smi
-Resultater på valideringssett:
-CER: 5.56% WER: 12.88
-
-### sb_smi
-synth_base videretrent på den manuelt annoterte samiske dataen (gt_smi)
-Resultater på valideringssett:
-4.33 WER: 8.78%
-
-### sb_smi_nor_pred
-synth_base videretrent på gt_smi + pred_smi + gt_nor
-Resultater på valideringssett:
-CER: 4.36 WER 7.7%
+[smi](smi) is [the Norwegian tesseract base model](https://github.com/tesseract-ocr/tessdata_best/blob/main/nor.traineddata) fine-tuned on GT-Sámi
+[smi_nor](smi_nor) is the Norwegian tesseract base model fine-tuned on GT-Sámi and GT-Nor
+[smi_pred](smi_pred) is the Norwegian tesseract base model fine-tuned on GT-Sámi and Pred-Sámi
+[smi_nor_pred](smi_nor_pred) is the Norwegian tesseract base model fine-tuned on GT-Sámi, GT-Nor and Pred-Sámi
 
 
-### Basemodell-eksperiment
-Trent én runde med tesseract på forskjellige basemodeller med vår data.
+[synth_base](synth_base) is the Norwegian tesseract base model fine-tuned on Synth-Sámi
+[sb_smi](sb_smi) is synth_base fine-tuned on GT-Sámi
+[sb_smi_nor_pred](sb_smi_nor_pred) is synth_base fine-tuned GT-Sámi, GT-Nor and Pred-Sámi
 
-- nor_smi1: CER: 5.03% WER: 11.97%
-- est_smi1: CER: 5.15% WER: 12.29%
-- fin_smi1: CER: 5.94% WER: 16.15%
+
+## Name changes explanation
+For some models the names have changed after training, in that case there is an `old_name.txt` file in the training_details folder in each model subdirectory.
+
+In the training script (and therefore in the training arguments json files in the training_details), we have used different names for the dataset configurations than the dataset names in the article. We have combined GT-Sámi (train, val and test splits), GT-Nor and Pred-Sámi in one dataset, and used filter functions to choose which parts of the data to use for training. The gt_pix and page_30 training arguments refer to GT-Nor and Pred-Sámi, respectively.

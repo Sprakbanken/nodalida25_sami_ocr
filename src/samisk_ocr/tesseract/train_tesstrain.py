@@ -148,20 +148,20 @@ def get_parser() -> ArgumentParser:
         "--page_30",
         choices=["only", "include", "exclude"],
         default="exclude",
-        help="Whether to include, exclude or transfer only the page_30 data",
+        help="Whether to include, exclude or transfer only the page_30 (Pred-Sámi) data ",
     )
     parser.add_argument(
         "--filter_len_30",
         type=int,
         metavar="n",
-        help="If provided, will filter out page_30 images where transcription is shorter than n",
+        help="If provided, will filter out page_30 (Pred-Sámi) images where transcription is shorter than n",
     )
 
     parser.add_argument(
         "--gt_pix",
         choices=["only", "include", "exclude"],
         default="exclude",
-        help="Whether to include, exclude or transfer only the gt_pix data",
+        help="Whether to include, exclude or transfer only the gt_pix (GT-Nor) data",
     )
     parser.add_argument("--num_epochs", type=int, default=5)
     parser.add_argument("--learning_rate", type=float, default=0.002)
