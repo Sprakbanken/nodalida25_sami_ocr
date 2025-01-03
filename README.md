@@ -31,12 +31,11 @@ See [tesseract_models/README.md](tesseract_models/README.md) for more details
 The transkribus models can be found in the transkribus app.
 
 Here is the list of transkribus model names and their details
-- SamiskOCR_smi_ub: the transkribus model trained on GT-Sámi without a base model (first row in table 3)
-- SamiskOCR_smi: the ?? transkribus base model fine-tuned on GT-Sámi
-- SamiskOCR_smi_nor: the ?? transkribus base model fine-tuned on GT-Sámi and GT-Nor
-- SamiskOCR_smi_smipred: the ?? transkribus base model fine-tuned on GT-Sámi and Pred-Sámi
-- SamiskOCR_alt: the ?? transkribus base model fine-tuned on GT-Sámi, GT-Nor and Pred-Sámi
-
+- SamiskOCR_smi_ub (model id xxxxx): the transkribus model trained on GT-Sámi without a base model (first row in table 3)
+- SamiskOCR_smi (model id xxxxx): the Transkribus print M1 base model (model id 39995) fine-tuned on GT-Sámi
+- SamiskOCR_smi_nor (model id xxxxx): the Transkribus print M1 base model fine-tuned on GT-Sámi and GT-Nor
+- SamiskOCR_smi_smipred (model id xxxxx): the Transkribus print M1 base model fine-tuned on GT-Sámi and Pred-Sámi
+- SamiskOCR_alt (model id xxxxx): the Transkribus print M1 base model fine-tuned on GT-Sámi, GT-Nor and Pred-Sámi
 
 
 ## Installation
