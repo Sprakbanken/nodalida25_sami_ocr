@@ -41,7 +41,7 @@ Here is the list of transkribus model names and their details
 
 ## Installation
 You can make a virtual Python environment and install like this:
-(if you have the correct version of python and venv installed)
+(if you have the correct version of Python and venv installed)
 ```
 python3 -m venv env-name
 . env-name/bin/activate
