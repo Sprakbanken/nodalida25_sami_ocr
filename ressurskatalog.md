@@ -2,8 +2,7 @@
 Dette er en samling av modeller for OCR (optical character recognition) av samiske språk.
 Disse kan brukes til å gjenkjenne tekst i bilder av trykt tekst (scannede bøker, magasiner, o.l) på nordsamisk, sørsamisk, lulesamisk og inaresamisk.
 
-Mer detaljert informasjon om trening og evaluering av modellene kan du lese i artikkelen [Comparative analysis of optical character recognition methods
-for Sámi texts from the National Library of Norway](url.no)
+Mer detaljert informasjon om trening og evaluering av modellene kan du lese i artikkelen [Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway](url.no)
 
 Samlingen består tre forskjellige typer modeller: Transkribus-modeller, Tesseract-modeller og TrOCR-modeller.
 
