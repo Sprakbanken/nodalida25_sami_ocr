@@ -165,9 +165,3 @@ generated_ids = model.generate(pixel_values)
 
 generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 ```
-
-## Contact Information
-For any questions or feedback, please contact us at [email@example.com](mailto:email@example.com).
-
-## License
-The models are released under the [MIT License](https://opensource.org/licenses/MIT).
