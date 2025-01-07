@@ -10,7 +10,8 @@ from tqdm import tqdm
 
 from samisk_ocr.clean_text_data import clean
 
-DATA_URL = "https://github.com/divvungiellatekno/tesstrain/archive/a8afdc55f5bebdef220416003507da673d2dd9a2.zip"
+COMMIT_HASH = "69c3473feedb616546055fd91cc4a2a032b289ab" # Commmit with corrected transcriptions
+DATA_URL = f"https://github.com/divvungiellatekno/tesstrain/archive/{COMMIT_HASH}.zip"
 
 
 def download_giellatekno_data():
@@ -39,8 +40,9 @@ def extract_giellatekno_data(output_path: Path):
     archive = download_giellatekno_data()
     for file in archive.namelist():
         if file.startswith(
-            "tesstrain-a8afdc55f5bebdef220416003507da673d2dd9a2/training-data/nor_sme-ground-truth"
+            f"tesstrain-{COMMIT_HASH}/training-data/nor_sme-ground-truth"
         ):
+            print(f"Extracting {file}")
             archive.extract(file, path=output_path)
 
 
