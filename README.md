@@ -1,5 +1,5 @@
-# Samisk OCR
-This repository contains the code for Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway (link coming soon).
+# Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway
+This repository contains the supplementary materials for "Enstad T, Trosterud T, Røsok MI, Beyer Y, Roald M. Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway. Accepted for publication in Proceedings of the 25th Nordic Conference on Computational Linguistics (NoDaLiDa) 2025." (preprint coming soon.)
 
 ## Models
 
