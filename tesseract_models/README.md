@@ -9,15 +9,14 @@ Each model subdirectory contains the .traineddata model file and a folder with t
 ## Models overview
 [ub_smi](ub_smi) is tesseract model trained from scratch on GT-Sámi (the first row in table 3)
 
-[smi](smi) is [the Norwegian tesseract base model](https://github.com/tesseract-ocr/tessdata_best/blob/main/nor.traineddata) fine-tuned on GT-Sámi
-[smi_nor](smi_nor) is the Norwegian tesseract base model fine-tuned on GT-Sámi and GT-Nor
-[smi_pred](smi_pred) is the Norwegian tesseract base model fine-tuned on GT-Sámi and Pred-Sámi
-[smi_nor_pred](smi_nor_pred) is the Norwegian tesseract base model fine-tuned on GT-Sámi, GT-Nor and Pred-Sámi
+[smi](smi) is [the Norwegian tesseract base model](https://github.com/tesseract-ocr/tessdata_best/blob/main/nor.traineddata) fine-tuned on GT-Sámi  
+[smi_nor](smi_nor) is the Norwegian tesseract base model fine-tuned on GT-Sámi and GT-Nor  
+[smi_pred](smi_pred) is the Norwegian tesseract base model fine-tuned on GT-Sámi and Pred-Sámi  
+[smi_nor_pred](smi_nor_pred) is the Norwegian tesseract base model fine-tuned on GT-Sámi, GT-Nor and Pred-Sámi  
 
-
-[synth_base](synth_base) is the Norwegian tesseract base model fine-tuned on Synth-Sámi
-[sb_smi](sb_smi) is synth_base fine-tuned on GT-Sámi
-[sb_smi_nor_pred](sb_smi_nor_pred) is synth_base fine-tuned GT-Sámi, GT-Nor and Pred-Sámi
+[synth_base](synth_base) is the Norwegian tesseract base model fine-tuned on Synth-Sámi  
+[sb_smi](sb_smi) is synth_base fine-tuned on GT-Sámi  
+[sb_smi_nor_pred](sb_smi_nor_pred) is synth_base fine-tuned GT-Sámi, GT-Nor and Pred-Sámi  
 
 
 ## Name changes explanation
