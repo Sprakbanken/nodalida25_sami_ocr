@@ -5,7 +5,7 @@ tags: []
 
 # Model Card for Model ID
 This is a TrOCR-model for OCR (optical character recognition) of Sámi languages.
-It can be used to recognize text in images of printed text (scanned books, magazines, etc.) in Northern Sámi, Southern Sámi, Lule Sámi, and Inari Sámi.
+It can be used to recognize text in images of printed text (scanned books, magazines, etc.) in North Sámi, South Sámi, Lule Sámi, and Inari Sámi.
 
 ## Model Details
 
@@ -13,7 +13,7 @@ It can be used to recognize text in images of printed text (scanned books, magaz
 
 - **Developed by:** The National Library of Norway
 - **Model type:** TrOCR
-- **Languages:**  Northern Sámi (sme), Southern Sámi (sma), Lule Sámi (smj), and Inari Sámi (smn)
+- **Languages:**  North Sámi (sme), South Sámi (sma), Lule Sámi (smj), and Inari Sámi (smn)
 - **License:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 - **Finetuned from model :** [TrOCR-printed base model](https://huggingface.co/microsoft/trocr-base-printed)
 
@@ -23,7 +23,7 @@ It can be used to recognize text in images of printed text (scanned books, magaz
 - **Paper:** "Enstad T, Trosterud T, Røsok MI, Beyer Y, Roald M. Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway. Accepted for publication in Proceedings of the 25th Nordic Conference on Computational Linguistics (NoDaLiDa) 2025." (preprint coming soon.)
 
 ## Uses
-You can use the raw model for optical character recognition (OCR) on single text-line images in Northern Sámi, Southern Sámi, Lule Sámi, and Inari Sámi. 
+You can use the raw model for optical character recognition (OCR) on single text-line images in North Sámi, South Sámi, Lule Sámi, and Inari Sámi. 
 
 ### Out-of-Scope Use
 The model only works with images of lines of text.
