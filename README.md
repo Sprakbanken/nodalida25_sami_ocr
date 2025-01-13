@@ -37,6 +37,8 @@ Here is the list of transkribus model names and their details
 - SamiskOCR_smi_smipred (model id 192137): the Transkribus print M1 base model fine-tuned on GT-Sámi and Pred-Sámi
 - SamiskOCR_alt (model id 179305): the Transkribus print M1 base model fine-tuned on GT-Sámi, GT-Nor and Pred-Sámi
 
+## Synthetic data
+The code to generate the synthetic data (Synth-Sámi) we used to pre-train Tesseract and TrOCR models is available in this [GitHub repository](https://github.com/sprakbanken/synthetic_text_images), and the dataset is [available on Huggingface](https://huggingface.co/datasets/Sprakbanken/synthetic_sami_ocr_data).
 
 ## Installation
 You can make a virtual Python environment and install like this:
