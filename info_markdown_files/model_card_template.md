@@ -7,7 +7,20 @@ tags: []
 This is a TrOCR-model for OCR (optical character recognition) of Sámi languages.
 It can be used to recognize text in images of printed text (scanned books, magazines, etc.) in North Sámi, South Sámi, Lule Sámi, and Inari Sámi.
 
-## Model Details
+## Collection details 
+This model is a part of our collection of OCR models for Sámi languages.
+
+The following TrOCR models are available:
+- [Sprakbanken/trocr_smi](https://huggingface.co/Sprakbanken/trocr_smi): [TrOCR-printed base model](https://huggingface.co/microsoft/trocr-base-printed) fine-tuned on manually annotated Sámi data
+- [Sprakbanken/trocr_smi_nor](https://huggingface.co/Sprakbanken/trocr_smi_nor): TrOCR-printed base model fine-tuned on manually annotated Sámi and Norwegian data
+- [Sprakbanken/trocr_smi_pred](https://huggingface.co/Sprakbanken/trocr_smi_pred): TrOCR-printed base model fine-tuned on manually annotated and automatically transcribed Sámi data
+- [Sprakbanken/trocr_smi_nor_pred](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred): TrOCR-printed base model fine-tuned on manually annotated and automatically transcribed Sámi data, and manually annotated Norwegian data
+- [Sprakbanken/trocr_smi_synth](https://huggingface.co/Sprakbanken/trocr_smi_synth): TrOCR-printed base model fine-tuned on [Sprakbanken/synthetic_sami_ocr_data](https://huggingface.co/datasets/Sprakbanken/synthetic_sami_ocr_data), and then on manually annotated Sámi data
+- [Sprakbanken/trocr_smi_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_pred_synth): trocr_smi_synth fine-tuned on manually annotated and automatically transcribed Sámi data
+- [Sprakbanken/trocr_smi_nor_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred_synth): trocr_smi_synth fine-tuned on manually annotated and automatically transcribed Sámi data, and manually annotated Norwegian
+
+[Sprakbanken/trocr_smi_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_pred_synth) is the model that achieved the best results (of the TrOCR models) on our test dataset.
+
 
 ### Model Description
 
@@ -48,3 +61,8 @@ generated_ids = model.generate(pixel_values)
 
 generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
 ```
+## Citation 
+
+**APA:**
+
+Enstad, T., Trosterud, T., Røsok, M. I., Beyer, Y., & Roald, M. (2025). Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway. Proceedings of the 25th Nordic Conference on Computational Linguistics (NoDaLiDa).
