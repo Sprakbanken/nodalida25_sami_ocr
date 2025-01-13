@@ -1,6 +1,16 @@
 ---
 library_name: transformers
-tags: []
+license: cc-by-4.0
+language:
+  - smi
+  - smj
+  - sme
+  - sma
+  - smn
+datasets:
+  - Sprakbanken/synthetic_sami_ocr_data
+base_model:
+  - microsoft/trocr-base-printed
 ---
 
 # Model Card for Model ID
@@ -30,7 +40,7 @@ The following TrOCR models are available:
 - **Model type:** TrOCR
 - **Languages:**  North Sámi (sme), South Sámi (sma), Lule Sámi (smj), and Inari Sámi (smn)
 - **License:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-- **Finetuned from model :** [TrOCR-printed base model](https://huggingface.co/microsoft/trocr-base-printed)
+- **Finetuned from model :** [microsoft/trocr-base-printed](https://huggingface.co/microsoft/trocr-base-printed)
 
 ### Model Sources 
 
