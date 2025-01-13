@@ -84,7 +84,7 @@ generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)
 
 # OCR Models for Sámi Languages
 This is a collection of models for OCR (optical character recognition) of Sámi languages.
-These can be used to recognize text in images of printed text (scanned books, magazines, etc.) in Northern Sámi, Southern Sámi, Lule Sámi, and Inari Sámi.
+These can be used to recognize text in images of printed text (scanned books, magazines, etc.) in North Sámi, South Sámi, Lule Sámi, and Inari Sámi.
 
 You can read more detailed information about the training and evaluation of the models in the article [Comparative analysis of optical character recognition methods
 for Sámi texts from the National Library of Norway](url.no)
