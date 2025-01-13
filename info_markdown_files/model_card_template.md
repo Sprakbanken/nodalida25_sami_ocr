@@ -16,11 +16,13 @@ The following TrOCR models are available:
 - [Sprakbanken/trocr_smi_pred](https://huggingface.co/Sprakbanken/trocr_smi_pred): microsoft/trocr-base-printed fine-tuned on manually annotated and automatically transcribed Sámi data
 - [Sprakbanken/trocr_smi_nor_pred](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred): microsoft/trocr-base-printed fine-tuned on manually annotated and automatically transcribed Sámi data, and manually annotated Norwegian data
 - [Sprakbanken/trocr_smi_synth](https://huggingface.co/Sprakbanken/trocr_smi_synth): microsoft/trocr-base-printed fine-tuned on [Sprakbanken/synthetic_sami_ocr_data](https://huggingface.co/datasets/Sprakbanken/synthetic_sami_ocr_data), and then on manually annotated Sámi data
-- [Sprakbanken/trocr_smi_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_pred_synth): Sprakbanken/trocr_smi_synth fine-tuned on manually annotated and automatically transcribed Sámi data
-- [Sprakbanken/trocr_smi_nor_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred_synth): Sprakbanken/trocr_smi_synth fine-tuned on manually annotated and automatically transcribed Sámi data, and manually annotated Norwegian
+- [Sprakbanken/trocr_smi_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_pred_synth): microsoft/trocr-base-printed fine-tuned on Sprakbanken/synthetic_sami_ocr_data, and then fine-tuned on manually annotated and automatically transcribed Sámi data
+- [Sprakbanken/trocr_smi_nor_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred_synth): microsoft/trocr-base-printed fine-tuned on Sprakbanken/synthetic_sami_ocr_data, and then fine-tuned on manually annotated and automatically transcribed Sámi data, and manually annotated Norwegian
 
 [Sprakbanken/trocr_smi_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_pred_synth) is the model that achieved the best results (of the TrOCR models) on our test dataset.
 
+## Model Details
+<!-- model details here  -->
 
 ### Model Description
 
