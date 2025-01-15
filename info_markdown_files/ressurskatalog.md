@@ -2,7 +2,7 @@
 Dette er en samling av modeller for OCR (optical character recognition) av samiske språk.
 Disse kan brukes til å gjenkjenne tekst i bilder av trykt tekst (scannede bøker, magasiner, o.l) på nordsamisk, sørsamisk, lulesamisk og inaresamisk.
 
-Mer detaljert informasjon om trening og evaluering av modellene kan du lese i artikkelen [Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway](url.no)
+Mer detaljert informasjon om trening og evaluering av modellene kan du lese i artikkelen [Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway](Comparative_analysis_of_OCR_for_Sami_texts_from_NLN_NoDaLiDa_Baltic_HLT_2025.pdf)
 
 Samlingen består tre forskjellige typer modeller: Transkribus-modeller, Tesseract-modeller og TrOCR-modeller.
 
@@ -32,7 +32,7 @@ Følgende modeller er tilgjengelige:
 - [smi_nor](tesseract_models/smi_nor): den norske basemodellen fin-tunet på manuelt annotert samisk og norsk data
 - [smi_pred](tesseract_models/smi_pred): den norske basemodellen fin-tunet på manuelt annotert og automatisk transkribert samisk data
 - [smi_nor_pred](tesseract_models/smi_nor_pred): den norske basemodellen fin-tunet på manuelt annotert og automatisk transkribert samisk data, og manuelt annotert norsk data
-- [synth_base](tesseract_models/synth_base): den norske basemodellen fin-tunet på syntetisk* samisk data
+- [synth_base](tesseract_models/synth_base): den norske basemodellen fin-tunet på [syntetisk* samisk data](https://huggingface.co/datasets/Sprakbanken/synthetic_sami_ocr_data)
 - [sb_smi](tesseract_models/sb_smi): synth_base fin-tunet på manuelt annotert samisk data
 - [sb_smi_nor_pred](tesseract_models/sb_smi_nor_pred): synth_base fin-tunet på manuelt annotert og automatisk transkribert samisk data, og manuelt annotert norsk data
 
@@ -54,14 +54,13 @@ Følgende modeller er tilgjengelige:
 - [trocr_smi_nor](https://huggingface.co/Sprakbanken/trocr_smi_nor): TrOCR-printed-basemodellen fin-tunet on på manuelt annotert samisk og norsk data
 - [trocr_smi_pred](https://huggingface.co/Sprakbanken/trocr_smi_pred): TrOCR-printed-basemodellen fin-tunet på manuelt annotert og automatisk transkribert samisk data
 - [trocr_smi_nor_pred](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred): TrOCR-printed-basemodellen fin-tunet på manuelt annotert og automatisk transkribert samisk data, og manuelt annotert norsk data
-- [trocr_smi_synth](https://huggingface.co/Sprakbanken/trocr_smi_synth): TrOCR-printed-basemodellen fin-tunet på syntetisk* samisk data, og deretter på manuelt annotert samisk data
-- [trocr_smi_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_pred_synth): trocr_smi_synth fin-tunet på manuelt annotert og automatisk transkribert samisk data
-- [trocr_smi_nor_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred_synth): trocr_smi_synth fin-tunet på manuelt annotert og automatisk transkribert samisk data, og manuelt annotert norsk
+- [trocr_smi_synth](https://huggingface.co/Sprakbanken/trocr_smi_synth): TrOCR-printed-basemodellen fin-tunet på [syntetisk* samisk data](https://huggingface.co/datasets/Sprakbanken/synthetic_sami_ocr_data), og deretter på manuelt annotert samisk data
+- [trocr_smi_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_pred_synth): TrOCR-printed-basemodellen fin-tunet på syntetisk samisk data, og deretter fin-tunet på manuelt annotert og automatisk transkribert samisk data
+- [trocr_smi_nor_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred_synth): TrOCR-printed-basemodellen fin-tunet på syntetisk samisk data, og deretter fin-tunet på manuelt annotert og automatisk transkribert samisk data, og manuelt annotert norsk
 
 trocr_smi_pred_synth er modellen som fikk best resultater (av TrOCR-modellene) på vårt testdatasett
 
 \* syntetisk her betyr at vi har ekte samisk tekst, som vi kan laget bilder av, som skal ligne på scannet tekst. I motsetning til den manuelt transkriberte dataen, som er bøker og aviser som er scannet, og deretter manuelt transkribert.
-
 
 Modellene fungerer kun med bilder av linjer av tekst.
 Om du har bilder av hele sider av tekst, må du dermed segmentere teksten i linjer først, for å få nytte av denne modellen.
@@ -84,10 +83,9 @@ generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)
 
 # OCR Models for Sámi Languages
 This is a collection of models for OCR (optical character recognition) of Sámi languages.
-These can be used to recognize text in images of printed text (scanned books, magazines, etc.) in Northern Sámi, Southern Sámi, Lule Sámi, and Inari Sámi.
+These can be used to recognize text in images of printed text (scanned books, magazines, etc.) in North Sámi, South Sámi, Lule Sámi, and Inari Sámi.
 
-You can read more detailed information about the training and evaluation of the models in the article [Comparative analysis of optical character recognition methods
-for Sámi texts from the National Library of Norway](url.no)
+You can read more detailed information about the training and evaluation of the models in the article [Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway](Comparative_analysis_of_OCR_for_Sami_texts_from_NLN_NoDaLiDa_Baltic_HLT_2025.pdf)
 
 The collection consists of three different types of models: Transkribus models, Tesseract models, and TrOCR models.
 
@@ -116,13 +114,14 @@ The following models are available:
 - [smi_nor](tesseract_models/smi_nor): the Norwegian base model fine-tuned on manually annotated Sámi and Norwegian data
 - [smi_pred](tesseract_models/smi_pred): the Norwegian base model fine-tuned on manually annotated and automatically transcribed Sámi data
 - [smi_nor_pred](tesseract_models/smi_nor_pred): the Norwegian base model fine-tuned on manually annotated and automatically transcribed Sámi data, and manually annotated Norwegian data
-- [synth_base](tesseract_models/synth_base): the Norwegian base model fine-tuned on synthetic* Sámi data
+- [synth_base](tesseract_models/synth_base): the Norwegian base model fine-tuned on [synthetic* Sámi data](https://huggingface.co/datasets/Sprakbanken/synthetic_sami_ocr_data)  
 - [sb_smi](tesseract_models/sb_smi): synth_base fine-tuned on manually annotated Sámi data
 - [sb_smi_nor_pred](tesseract_models/sb_smi_nor_pred): synth_base fine-tuned on manually annotated and automatically transcribed Sámi data, and manually annotated Norwegian data
 
 The latter model achieved the best results (of the Tesseract models) on our test dataset.
 
 \* synthetic here means that we have real Sámi text, which we have created images of, to resemble scanned text. Unlike the manually transcribed data, which are books and newspapers that are scanned and then manually transcribed.
+
 
 Tesseract tips:
 - You need to move the .traineddata files to the tessdata area on your PC
@@ -138,9 +137,9 @@ The following models are available:
 - [trocr_smi_nor](https://huggingface.co/Sprakbanken/trocr_smi_nor): TrOCR-printed base model fine-tuned on manually annotated Sámi and Norwegian data
 - [trocr_smi_pred](https://huggingface.co/Sprakbanken/trocr_smi_pred): TrOCR-printed base model fine-tuned on manually annotated and automatically transcribed Sámi data
 - [trocr_smi_nor_pred](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred): TrOCR-printed base model fine-tuned on manually annotated and automatically transcribed Sámi data, and manually annotated Norwegian data
-- [trocr_smi_synth](https://huggingface.co/Sprakbanken/trocr_smi_synth): TrOCR-printed base model fine-tuned on synthetic* Sámi data, and then on manually annotated Sámi data
-- [trocr_smi_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_pred_synth): trocr_smi_synth fine-tuned on manually annotated and automatically transcribed Sámi data
-- [trocr_smi_nor_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred_synth): trocr_smi_synth fine-tuned on manually annotated and automatically transcribed Sámi data, and manually annotated Norwegian
+- [trocr_smi_synth](https://huggingface.co/Sprakbanken/trocr_smi_synth): TrOCR-printed base model fine-tuned on [synthetic* Sámi data](https://huggingface.co/datasets/Sprakbanken/synthetic_sami_ocr_data), and then on manually annotated Sámi data
+- [trocr_smi_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_pred_synth): TrOCR-printed base model fine-tuned on synthetic Sámi data, and then fine-tuned on manually annotated and automatically transcribed Sámi data
+- [trocr_smi_nor_pred_synth](https://huggingface.co/Sprakbanken/trocr_smi_nor_pred_synth): TrOCR-printed base model fine-tuned on synthetic Sámi data, and then fine-tuned on manually annotated and automatically transcribed Sámi data, and manually annotated Norwegian
 
 trocr_smi_pred_synth is the model that achieved the best results (of the TrOCR models) on our test dataset.
 
