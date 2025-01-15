@@ -1,7 +1,7 @@
 # Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway
 This repository contains the supplementary materials for "Enstad T, Trosterud T, Røsok MI, Beyer Y, Roald M. Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway. Accepted for publication in Proceedings of the 25th Nordic Conference on Computational Linguistics (NoDaLiDa) 2025."
 
-Read the paper [here](Comparative_analysis_of_OCR_for_Sami_texts_from_NLN_NoDaLiDa_Baltic_HLT_2025.pdf) 
+Read the paper [here](https://arxiv.org/abs/2501.07300) 
 
 ## Models
 
