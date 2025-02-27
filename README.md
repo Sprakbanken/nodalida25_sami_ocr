@@ -30,7 +30,7 @@ The models can be found on our [huggingface page](https://huggingface.co/Sprakba
 See [tesseract_models/README.md](tesseract_models/README.md) for more details
 
 ### Transkribus models
-The transkribus models can be found in the transkribus app.
+The transkribus models can be found in the transkribus app.  
 You can try out our best model [here](https://www.transkribus.org/model/sami-ocr)
 
 Here is the list of transkribus model names and their details
