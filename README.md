@@ -31,6 +31,7 @@ See [tesseract_models/README.md](tesseract_models/README.md) for more details
 
 ### Transkribus models
 The transkribus models can be found in the transkribus app.
+You can try out our best model [here](https://www.transkribus.org/model/sami-ocr)
 
 Here is the list of transkribus model names and their details
 - SamiskOCR_smi_ub (model id 181605): the transkribus model trained on GT-Sámi without a base model (first row in table 3)
