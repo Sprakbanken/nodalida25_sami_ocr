@@ -1,7 +1,7 @@
 # Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway
 This repository contains the supplementary materials for "Enstad T, Trosterud T, Røsok MI, Beyer Y, Roald M. Comparative analysis of optical character recognition methods for Sámi texts from the National Library of Norway. Proceedings of the Joint 25th Nordic Conference on Computational Linguistics and 11th Baltic Conference on Human Language Technologies (NoDaLiDa/Baltic-HLT 2025)"
 
-Read the paper [here](https://dspace.ut.ee/items/a8bcbac5-5974-487c-b501-4c2e4d585011) 
+Read the paper here: [https://aclanthology.org/2025.nodalida-1.11/](https://aclanthology.org/2025.nodalida-1.11/)
 
 ## Models
 
@@ -67,3 +67,29 @@ pdm run python -m samisk_ocr.tesseract.transcribe <arg1> <arg2> ..
 The code to make the tables and plots can be found in [notebooks/tables](notebooks/tables) and [notebooks/plots](notebooks/plots)  
 The code to train models can be found in [src/samisk_ocr/trocr](src/samisk_ocr/trocr) and [src/samisk_ocr/tesseract](src/samisk_ocr/tesseract)  
 The code to evaluate model predictions can be found in [src/samisk_ocr/evaluate_predictions.py](src/samisk_ocr/evaluate_predictions.py)  
+
+
+## Citation
+
+
+```
+@inproceedings{enstad-etal-2025-comparative,
+    title = "Comparative analysis of optical character recognition methods for {S{\'a}mi} texts from the National Library of {Norway}",
+    author = "Enstad, Tita  and
+      Trosterud, Trond  and
+      R{\o}sok, Marie Iversdatter  and
+      Beyer, Yngvil  and
+      Roald, Marie",
+    editor = "Johansson, Richard  and
+      Stymne, Sara",
+    booktitle = "Proceedings of the Joint 25th Nordic Conference on Computational Linguistics and 11th Baltic Conference on Human Language Technologies (NoDaLiDa/Baltic-HLT 2025)",
+    month = mar,
+    year = "2025",
+    address = "Tallinn, Estonia",
+    publisher = "University of Tartu Library",
+    url = "https://aclanthology.org/2025.nodalida-1.11/",
+    pages = "98--108",
+    ISBN = "978-9908-53-109-0",
+    abstract = "Optical Character Recognition (OCR) is crucial to the National Library of Norway`s (NLN) digitisation process as it converts scanned documents into machine-readable text. However, for the S{\'a}mi documents in NLN`s collection, the OCR accuracy is insufficient. Given that OCR quality affects downstream processes, evaluating and improving OCR for text written in S{\'a}mi languages is necessary to make these resources accessible. To address this need, this work fine-tunes and evaluates three established OCR approaches, Transkribus, Tesseract and TrOCR, for transcribing S{\'a}mi texts from NLN`s collection. Our results show that Transkribus and TrOCR outperform Tesseract on this task, while Tesseract achieves superior performance on an out-of-domain dataset. Furthermore, we show that fine-tuning pre-trained models and supplementing manual annotations with machine annotations and synthetic text images can yield accurate OCR for S{\'a}mi languages, even with a moderate amount of manually annotated data."
+}
+``` 
